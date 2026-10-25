@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="__CSRF_TOKEN__">
+  <title>MiniFuse 2 · Linux</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">mf</span><div><h1>MiniFuse 2</h1><span class="subtitle">Панель управления Linux</span></div></div>
+    <div class="connection"><span class="status-dot" id="device-dot"></span><span id="device-status">Подключение…</span></div>
+    <div class="presets"><span id="saved-status">Изменений нет</span><button id="load">Загрузить</button><button id="save" class="accent">Сохранить</button></div>
+  </header>
+  <main class="workspace">
+    <aside>
+      <section class="audio-settings"><h2>Настройки звука</h2><p id="audio-current" class="readout" role="status">Проверка карты…</p><label for="audio-rate">Частота</label><select id="audio-rate" disabled><option value="0">Автоматически</option></select><label for="audio-quantum">Буфер</label><select id="audio-quantum" disabled><option value="0">Автоматически</option></select><p id="audio-period" class="muted small"></p><label class="audio-remember"><input id="audio-remember" type="checkbox" checked> Запомнить для этой карты</label><button id="audio-apply" class="wide" disabled>Применить</button><p class="muted small">Настройки общие для PipeWire и затрагивают другие приложения. При переключении звук кратко прервётся. Меньше буфер — ниже задержка и выше нагрузка.</p><p class="muted small">При отключении карты или использовании другого аудиоустройства панель освобождает свои настройки. Малые буферы пока проходят проверку устойчивости.</p><button id="audio-reset" class="wide">Вернуть автоматический режим</button></section>
+      <section class="preset-files"><h2>Пресет Windows</h2><label for="mfp-file">Файл MiniFuse 2 (.mfp)</label><input id="mfp-file" type="file" accept=".mfp"><div class="preset-actions"><button id="import-mfp" disabled>Применить .mfp</button><button id="export-mfp" disabled>Скачать .mfp</button></div><p class="muted small">Импорт заменяет три программных микса. После импорта можно редактировать имена полос и миксов. Имена и дополнительные поля сохраняются. Аппаратные настройки не меняются.</p></section>
+      <section class="hardware"><h2>Аналоговые входы</h2><p class="aside-note">Режим инструмента</p><div class="inst-row"><button id="inst1" aria-pressed="false">INST 1</button><button id="inst2" aria-pressed="false">INST 2</button></div><div class="readout"><span>Фантомное питание</span><strong id="phantom">—</strong></div><button id="phantom48v" class="wide" aria-pressed="false" disabled>+48V</button><p id="phantom-status" class="muted small" role="status">Проверка поддержки…</p></section>
+      <section class="direct-monitor"><h2>Прямой мониторинг</h2><button id="direct-mono" class="wide" aria-pressed="false" disabled>Direct Mono</button><p class="muted small">Моно для аппаратного прослушивания входов.</p><p id="mono-status" class="muted small" role="status">Проверка поддержки…</p></section>
+      <section class="hardware-loopback"><details><summary>Аппаратный loopback</summary><p class="muted small">Маршруты встроенного микса карты. Программные миксы во вкладках управляются отдельно.</p><button id="hw-loopback" class="wide" aria-pressed="false" disabled>Loopback</button><button id="hw-usb12" class="wide" aria-pressed="false" disabled>В USB 1/2</button><button id="hw-monitor" class="wide" aria-pressed="false" disabled>В монитор и наушники</button><p id="hw-routing-status" class="muted small" role="status">Проверка поддержки…</p></details></section>
+      <section class="routing"><h2>Подключение карты</h2><p id="route-status">Проверка аудиоустройства…</p><label for="device-port">MiniFuse 2</label><select id="device-port" aria-label="USB порт MiniFuse"></select><button id="route" class="wide">Подключить входы и выход</button><p class="muted small">Монитор и наушники получают первый микс. Input 1/2 остаётся отдельным источником записи.</p></section>
+      <section class="apps"><h2>Звук приложений</h2><p>Для воспроизведения выбери <strong>MiniFuse Main 1/2</strong> или один из Virtual.</p><p>Для записи — <strong>MiniFuse Mix 3/4</strong>, <strong>Mix 5/6</strong> или <strong>Loopback Main 7/8</strong>.</p></section>
+      <div class="aside-footer"><span class="status-dot online"></span> Четыре стереовыхода и четыре источника записи</div>
+    </aside>
+    <section class="console" aria-label="Микшер">
+      <section class="device-meter-panel" aria-labelledby="device-meter-heading">
+        <div class="device-meter-heading"><h2 id="device-meter-heading">Аппаратные уровни</h2><span id="device-meter-status" class="muted small" role="status">Ожидание карты</span></div>
+        <div class="device-meter-grid">
+          <div><span>Вход 1</span><output id="device-meter-label-0">Нет данных</output><div class="device-meter-track" id="device-meter-track-0" role="meter" aria-label="Аппаратный уровень входа 1" aria-valuemin="-60" aria-valuemax="0"><i id="device-meter-fill-0"></i><b id="device-meter-peak-0"></b></div></div>
+          <div><span>Вход 2</span><output id="device-meter-label-1">Нет данных</output><div class="device-meter-track" id="device-meter-track-1" role="meter" aria-label="Аппаратный уровень входа 2" aria-valuemin="-60" aria-valuemax="0"><i id="device-meter-fill-1"></i><b id="device-meter-peak-1"></b></div></div>
+          <div><span>Loopback L</span><output id="device-meter-label-2">Нет данных</output><div class="device-meter-track" id="device-meter-track-2" role="meter" aria-label="Аппаратный уровень loopback слева" aria-valuemin="-60" aria-valuemax="0"><i id="device-meter-fill-2"></i><b id="device-meter-peak-2"></b></div></div>
+          <div><span>Loopback R</span><output id="device-meter-label-3">Нет данных</output><div class="device-meter-track" id="device-meter-track-3" role="meter" aria-label="Аппаратный уровень loopback справа" aria-valuemin="-60" aria-valuemax="0"><i id="device-meter-fill-3"></i><b id="device-meter-peak-3"></b></div></div>
+        </div>
+        <p class="muted small">Входы и loopback самой карты. Ниже — индикаторы программных миксов.</p>
+      </section>
+      <div class="mix-heading"><div class="tabs" role="tablist" aria-label="Выбор микса"><button role="tab" aria-selected="true" data-mix="0">Монитор и наушники</button><button role="tab" aria-selected="false" data-mix="1">Микс 3/4</button><button role="tab" aria-selected="false" data-mix="2">Микс 5/6</button></div><button id="reset-meters" class="quiet">Сброс пиков</button></div>
+      <details class="meter-settings"><summary>Индикаторы</summary><div class="meter-settings-fields">
+        <label for="meter-orange">Оранжевый цвет от<select id="meter-orange"><option value="-1">−1 dBFS</option><option value="-3">−3 dBFS</option><option value="-6" selected>−6 dBFS</option><option value="-9">−9 dBFS</option><option value="-12">−12 dBFS</option></select></label>
+        <label for="meter-clip-reset">Сброс перегрузки<select id="meter-clip-reset"><option value="infinite">До ручного сброса</option><option value="1.5s">Через 1,5 секунды</option><option value="3s">Через 3 секунды</option></select></label>
+        <label for="meter-peak-reset">Удержание пика<select id="meter-peak-reset"><option value="none">Без удержания</option><option value="1s">1 секунда</option><option value="2s">2 секунды</option><option value="3s">3 секунды</option><option value="4s">4 секунды</option><option value="5s">5 секунд</option><option value="infinite">До ручного сброса</option></select></label>
+      </div><p class="muted small">Настройки индикаторов сохраняются автоматически, отдельно от микса. Смена режима сбрасывает накопленные пики.</p></details>
+      <div class="mix-caption"><div><label class="name-label" for="mix-name">Имя микса</label><input id="mix-name" class="preset-mix-name name-input" type="text" maxlength="256" placeholder="После импорта .mfp" disabled><span id="mix-description">На монитор, наушники и Loopback Main 7/8</span></div><span>Уровни в dBFS</span></div>
+      <div class="channel-controls"><button id="link-inputs" aria-pressed="false" disabled>Связать Input 1/2</button><div id="virtual-controls" hidden><span>Добавить:</span><button data-add-virtual="0">Virtual 3/4</button><button data-add-virtual="1">Virtual 5/6</button><button data-add-virtual="2">Virtual 7/8</button></div><span class="muted small">Link и видимость каналов доступны после импорта .mfp</span></div>
+      <div class="strip-scroll"><div id="strips" class="strips"></div></div>
+      <footer class="console-footer"><p id="operation-status" role="status">Управление программными миксами готово.</p><button id="factory" class="quiet">Заводской микс</button></footer>
+    </section>
+  </main>
+  <div id="error" class="error" role="alert" hidden></div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+/* SPDX-License-Identifier: MIT */
+/* Palette override; control geometry and behavior stay shared. */
+@define-color mf_canvas #172229;
+@define-color mf_surface #202e36;
+@define-color mf_sidebar #1b2931;
+@define-color mf_text #e1eaf0;
+@define-color mf_hint #afc0ca;
+@define-color mf_line #41545f;
+@define-color mf_accent #087e99;
+@define-color mf_accent_soft #173f4d;
+@define-color mf_warning #ffe0a3;
+@define-color mf_warning_bg #513b1c;
+@define-color mf_error #ee8d84;
+@define-color mf_accent_text #91ddf0;
+@define-color mf_toolbar #202d35;
+@define-color mf_control_border #526874;
+@define-color mf_hover #2c414b;
+@define-color mf_hover_border #76bfd1;
+@define-color mf_pressed #355662;
+@define-color mf_accent_hover #146f85;
+@define-color mf_warning_border #bd9250;
+@define-color mf_warning_hover #65491f;
+@define-color mf_disabled_text #94a6af;
+@define-color mf_disabled_bg #26343c;
+@define-color mf_disabled_line #3e505b;
+@define-color mf_check_border #8ca4b1;
+@define-color mf_track #435661;
+@define-color mf_slider_border #91aebb;
+@define-color mf_fader_fill #6b8998;
+@define-color mf_slider_disabled #5c7480;
+@define-color mf_scroll #698492;
+@define-color mf_connected #75d7b0;

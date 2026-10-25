@@ -1,0 +1,43 @@
+name: Build and test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libsoup-3.0-dev libjson-c-dev libmicrohttpd-dev libssl-dev pipewire-bin wireplumber xvfb fonts-dejavu-core desktop-file-utils
+      - name: Build
+        run: make -j2 all build/desktop-smoke
+      - name: Numeric and input-validation tests
+        run: make check
+      - name: Isolated GTK integration
+        run: dbus-run-session -- xvfb-run -a python3 tools/test_desktop.py --start-pipewire
+      - name: Source archive round-trip
+        run: |
+          bash tools/package_release.sh
+          cd dist
+          sha256sum -c minifuze2-0.1.0-preview-source.tar.gz.sha256
+          tar -xzf minifuze2-0.1.0-preview-source.tar.gz
+          cd minifuze2-0.1.0-preview
+          sha256sum -c SHA256SUMS
+          make -j2 check
+  kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kernel build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential linux-headers-generic
+      - name: Build module without loading it
+        run: |
+          headers=$(find /usr/src -maxdepth 1 -type d -name 'linux-headers-*-generic' | sort -V | tail -n 1)
+          test -n "$headers"
+          make kernel KDIR="$headers"
