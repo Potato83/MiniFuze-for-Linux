@@ -482,6 +482,7 @@ static int controls(Graph *g, float w[6][10]) {
   if (!s)
     return -1;
   free(s);
+  char mismatch[160] = "";
   for (int attempt = 0; attempt < 20; attempt++) {
     objects = pw_snapshot();
     if (!objects)
@@ -499,14 +500,22 @@ static int controls(Graph *g, float w[6][10]) {
             copy(json_object_array_get_idx(pairs, j + 1)));
     }
     bool ok = true;
+    mismatch[0] = 0;
     for (int r = 0; r < 6; r++)
       for (int c = 0; c < 10; c++) {
         char name[64];
         snprintf(name, sizeof name, "m%d%c:Gain %d", r, c < 8 ? 'a' : 'b',
                  c < 8 ? c + 1 : c - 7);
         J *value = get(values, name);
-        if (!value || fabs(json_object_get_double(value) - w[r][c]) > 1e-6)
+        if (!value || fabs(json_object_get_double(value) - w[r][c]) > 1e-6) {
           ok = false;
+          if (!*mismatch)
+            snprintf(mismatch, sizeof mismatch, "%s expected %.9g got %s", name,
+                     (double)w[r][c],
+                     value ? json_object_to_json_string_ext(
+                                 value, JSON_C_TO_STRING_PLAIN)
+                           : "<missing>");
+        }
       }
     json_object_put(values);
     json_object_put(objects);
@@ -514,7 +523,7 @@ static int controls(Graph *g, float w[6][10]) {
       return 0;
     pause_ms(25);
   }
-  return fail("Mixer coefficient readback mismatch");
+  return fail("Mixer coefficient readback mismatch: %s", mismatch);
 }
 int graph_apply(Graph *g, J *state) {
   float candidate[6][10], original[6][10];
