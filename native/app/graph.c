@@ -469,7 +469,7 @@ static int controls(Graph *g, float w[6][10]) {
       json_object_array_add(params, json_object_new_double(w[r][c]));
     }
   char id[32];
-  snprintf(id, sizeof id, "%lld", (long long)node(g, "output"));
+  snprintf(id, sizeof id, "%lld", (long long)node(g, "input"));
   char *argv[] = {
       "pw-cli",
       "set-param",
@@ -481,6 +481,8 @@ static int controls(Graph *g, float w[6][10]) {
   json_object_put(v);
   if (!s)
     return -1;
+  char command_output[256];
+  snprintf(command_output, sizeof command_output, "%s", s);
   free(s);
   char mismatch[160] = "";
   for (int attempt = 0; attempt < 20; attempt++) {
@@ -491,7 +493,7 @@ static int controls(Graph *g, float w[6][10]) {
       json_object_put(objects);
       return -1;
     }
-    J *o = by_id(objects, node(g, "output"), "PipeWire:Interface:Node"),
+    J *o = by_id(objects, node(g, "input"), "PipeWire:Interface:Node"),
       *list = get(get(get(o, "info"), "params"), "Props"), *values = object();
     for (size_t i = 0; i < json_object_array_length(list); i++) {
       J *pairs = get(json_object_array_get_idx(list, i), "params");
@@ -523,7 +525,8 @@ static int controls(Graph *g, float w[6][10]) {
       return 0;
     pause_ms(25);
   }
-  return fail("Mixer coefficient readback mismatch: %s", mismatch);
+  return fail("Mixer coefficient readback mismatch: %s; pw-cli: %.100s",
+              mismatch, command_output);
 }
 int graph_apply(Graph *g, J *state) {
   float candidate[6][10], original[6][10];
