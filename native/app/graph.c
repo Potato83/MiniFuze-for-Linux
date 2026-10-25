@@ -458,38 +458,33 @@ static int controls(Graph *g, float w[6][10]) {
     return -1;
   }
   json_object_put(objects);
-  char *parameter = NULL;
-  size_t parameter_size = 0;
-  FILE *parameter_file = open_memstream(&parameter, &parameter_size);
-  if (!parameter_file)
-    return fail("Cannot serialize PipeWire controls");
-  fputs("{ params = [", parameter_file);
-  for (int r = 0; r < 6; r++)
+  char id[32];
+  snprintf(id, sizeof id, "%lld", (long long)node(g, "input"));
+  for (int r = 0; r < 6; r++) {
+    char *parameter = NULL;
+    size_t parameter_size = 0;
+    FILE *parameter_file = open_memstream(&parameter, &parameter_size);
+    if (!parameter_file)
+      return fail("Cannot serialize PipeWire controls");
+    fputs("{ params = [", parameter_file);
     for (int c = 0; c < 10; c++) {
       char name[64];
       snprintf(name, sizeof name, "m%d%c:Gain %d", r, c < 8 ? 'a' : 'b',
                c < 8 ? c + 1 : c - 7);
       fprintf(parameter_file, " \"%s\" %.9g", name, (double)w[r][c]);
     }
-  fputs(" ] }", parameter_file);
-  if (fclose(parameter_file)) {
+    fputs(" ] }", parameter_file);
+    if (fclose(parameter_file)) {
+      free(parameter);
+      return fail("Cannot serialize PipeWire controls");
+    }
+    char *argv[] = {"pw-cli", "set-param", id, "Props", parameter, NULL};
+    char *s = run(argv, 10000);
     free(parameter);
-    return fail("Cannot serialize PipeWire controls");
+    if (!s)
+      return -1;
+    free(s);
   }
-  char id[32];
-  snprintf(id, sizeof id, "%lld", (long long)node(g, "input"));
-  char *argv[] = {
-      "pw-cli",
-      "set-param",
-      id,
-      "Props",
-      parameter,
-      NULL};
-  char *s = run(argv, 10000);
-  free(parameter);
-  if (!s)
-    return -1;
-  free(s);
   char mismatch[160] = "";
   for (int attempt = 0; attempt < 20; attempt++) {
     objects = pw_snapshot();
