@@ -469,7 +469,7 @@ static int controls(Graph *g, float w[6][10]) {
       json_object_array_add(params, json_object_new_double(w[r][c]));
     }
   char id[32];
-  snprintf(id, sizeof id, "%lld", (long long)node(g, "input"));
+  snprintf(id, sizeof id, "%lld", (long long)node(g, "output"));
   char *argv[] = {
       "pw-cli",
       "set-param",
@@ -491,7 +491,7 @@ static int controls(Graph *g, float w[6][10]) {
       json_object_put(objects);
       return -1;
     }
-    J *o = by_id(objects, node(g, "input"), "PipeWire:Interface:Node"),
+    J *o = by_id(objects, node(g, "output"), "PipeWire:Interface:Node"),
       *list = get(get(get(o, "info"), "params"), "Props"), *values = object();
     for (size_t i = 0; i < json_object_array_length(list); i++) {
       J *pairs = get(json_object_array_get_idx(list, i), "params");
