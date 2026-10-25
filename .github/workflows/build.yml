@@ -17,6 +17,8 @@ jobs:
       - name: Numeric and input-validation tests
         run: make check
       - name: Isolated GTK integration
+        env:
+          GTK_A11Y: test
         run: dbus-run-session -- xvfb-run -a python3 tools/test_desktop.py --start-pipewire
       - name: Source archive round-trip
         run: |
