@@ -62,8 +62,19 @@ static gboolean drive(gpointer unused) {
       g_free(path);
     }
     gtk_range_set_value(GTK_RANGE(u->gain[2]), -9.5);
+    J *draft_mix = idx(get(u->draft, "mixes"), u->mix);
+    J *state_mix = idx(get(get(u->state, "mixer"), "mixes"), 0);
+    g_printerr("[DEBUG-mfci] fader set: mix=%d widget=%.2f draft=%.2f state=%.2f\n",
+               u->mix, gtk_range_get_value(GTK_RANGE(u->gain[2])),
+               val(get(idx(get(draft_mix, "strips"), 2), "level_db")),
+               val(get(idx(get(state_mix, "strips"), 2), "level_db")));
     break;
   case 1:
+    g_printerr("[DEBUG-mfci] fader response: mix=%d revision=%u sent=%u busy=%d debounce=%u draft=%p value=%.2f message=%s\n",
+               u->mix, u->revision, u->sent_revision, u->busy, u->debounce,
+               (void *)u->draft,
+               val(get(strip(0, 2), "level_db")),
+               gtk_label_get_text(GTK_LABEL(u->message)));
     g_assert_cmpfloat(val(get(strip(0, 2), "level_db")), ==, -9.5);
     gtk_range_set_value(GTK_RANGE(u->pan[2][0]), .25);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(u->mute[2]), TRUE);
