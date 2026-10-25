@@ -19,7 +19,7 @@ jobs:
       - name: Isolated GTK integration
         env:
           GTK_A11Y: test
-        run: dbus-run-session -- xvfb-run -a python3 tools/test_desktop.py --start-pipewire
+        run: dbus-run-session -- xvfb-run -a -s '-screen 0 1024x768x24' python3 tools/test_desktop.py --start-pipewire
       - name: Source archive round-trip
         run: |
           bash tools/package_release.sh
