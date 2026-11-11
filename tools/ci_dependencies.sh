@@ -11,7 +11,7 @@ esac
 log=$(mktemp)
 trap 'rm -f -- "$log"' EXIT
 apt_step() {
-  if sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 "$@" 2>&1 | tee "$log"; then
+  if timeout --signal=TERM --kill-after=10s 180s sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 "$@" 2>&1 | tee "$log"; then
     return
   fi
   {
