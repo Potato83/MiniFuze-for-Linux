@@ -392,6 +392,11 @@ def main():
         parser.error('Retain the existing report')
     if not 0 <= args.wait_hotplug <= 600 or (args.wait_hotplug and args.probe_switches):
         parser.error('Hotplug mode uses 1..600 seconds and cannot probe switches')
+    # Two matrix instances can both feed the same physical output. Require the
+    # operator to stop an installed mixer before this independent probe.
+    if any(props(obj).get('node.description', '').startswith('MiniFuse SLS matrix')
+           for obj in snapshot() if obj['type'] == 'PipeWire:Interface:Node'):
+        parser.error('Stop the existing MiniFuse mixer first (systemctl --user stop minifuze2.service)')
     before_defaults, before_clock = defaults(), clock_settings()
     with tempfile.TemporaryDirectory(prefix='minifuze-hardware-test-') as folder:
         probe = Probe(args, Path(folder))
