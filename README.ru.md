@@ -1,5 +1,8 @@
 # MiniFuse 2 for Linux
 
+[Скачать 0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1)
+— исходники и сборка для Ubuntu 24.04 x86_64 с контрольными суммами SHA256.
+
 ** Я сделал  это с ИИ, в первую очередь для личного пользования**
 
 Независимая панель управления Arturia MiniFuse 2 для Linux. Окно и аудиослужба

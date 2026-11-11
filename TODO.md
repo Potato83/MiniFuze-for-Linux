@@ -14,7 +14,7 @@
 - [x] Verify a fresh installation and active user-service update on CachyOS.
 - [ ] Listen through monitors/headphones and exercise ordinary DAW playback/recording.
 - [ ] Confirm port changes, suspend/resume and full host PipeWire restart on hardware.
-- [ ] Publish the checked prerelease.
+- [x] Publish the checked prerelease: [v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
 - [ ] Collect feedback before declaring a stable release.
 
 ## Next product improvements

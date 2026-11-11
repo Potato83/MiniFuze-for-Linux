@@ -32,4 +32,13 @@ round-trip, plus the separate kernel compilation job, passed in
 [GitHub Actions](https://github.com/Potato83/MiniFuze-for-Linux/actions/runs/43045195308).
 Runner package setup selects a reachable HTTPS mirror after Azure and the
 canonical archive host failed to resolve/respond; APT still checks Ubuntu's
-signed metadata. Publication is tracked on the [release checklist](../../TODO.md).
+signed metadata.
+
+The [version-tag release workflow](https://github.com/Potato83/MiniFuze-for-Linux/actions/runs/43046067180)
+also passed both build jobs and published
+[v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
+Both published archives and their checksum files were downloaded from GitHub.
+External SHA256 and all internal manifest entries passed verification (66
+source files, 68 files including the Ubuntu executables). Every packaged source
+file also matched the tagged local checkout. Remaining work is on the
+[release checklist](../../TODO.md).

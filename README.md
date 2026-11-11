@@ -1,5 +1,8 @@
 # MiniFuse 2 for Linux
 
+[Download 0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1)
+— source and Ubuntu 24.04 x86_64 archives with SHA256 checksums.
+
 **I made in with AI, for my personal use at first**
 
 An independent control application for the **Arturia MiniFuse 2**: a native
