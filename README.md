@@ -163,6 +163,6 @@ these controls off and retaining an imported Windows template. Hardware switches
 device selection and global rate/buffer settings are not included in exported presets.
 
 A `vVERSION` tag triggers the checked [release workflow](.github/workflows/release.yml).
-It creates a **draft prerelease** with source and Ubuntu 24.04 x86_64 binary archives
+It publishes a **prerelease** with source and Ubuntu 24.04 x86_64 binary archives
 after application, isolated GTK and kernel build jobs pass. See [release notes](docs/release-notes.md)
-and the acceptance checklist in [TODO.md](TODO.md) before publishing that draft.
+and the remaining acceptance work in [TODO.md](TODO.md) before declaring a stable release.

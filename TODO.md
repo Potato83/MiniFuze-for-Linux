@@ -6,7 +6,7 @@
 - [x] Solo, master Mute/Dim, numeric gain, Undo/Redo and Linux preset files.
 - [x] Names, Link and visibility without importing a Windows template.
 - [x] Local DSP, update/rollback, private service recovery and GTK checks.
-- [x] Versioned source/binary archives and draft release workflow.
+- [x] Versioned source/binary archives and checked prerelease workflow.
 - [ ] Confirm GitHub Actions on Ubuntu 24.04, including kernel compilation.
 - [x] Measure the current C candidate through OUTPUT L → INPUT 2 at 48 kHz.
 - [x] Exercise software controls/presets and hardware switch readback on MiniFuse 2.
@@ -14,7 +14,8 @@
 - [x] Verify a fresh installation and active user-service update on CachyOS.
 - [ ] Listen through monitors/headphones and exercise ordinary DAW playback/recording.
 - [ ] Confirm port changes, suspend/resume and full host PipeWire restart on hardware.
-- [ ] Publish the checked draft prerelease and collect feedback before declaring a stable release.
+- [ ] Publish the checked prerelease.
+- [ ] Collect feedback before declaring a stable release.
 
 ## Next product improvements
 

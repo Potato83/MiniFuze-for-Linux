@@ -34,5 +34,5 @@ The separate kernel module remains version 0.2.0.
 Detailed scope and numeric reports are in `docs/hardware-validation.md`.
 
 Verify archive hashes using the accompanying `.sha256` file. Source archives also
-include an internal SHA256SUMS manifest. The release workflow creates a draft
+include an internal SHA256SUMS manifest. The release workflow publishes a
 prerelease after both Ubuntu application tests and kernel compilation pass.
