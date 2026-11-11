@@ -8,19 +8,33 @@ case ${1:-} in
   kernel) packages=(build-essential linux-headers-generic) ;;
   *) echo 'Usage: ci_dependencies.sh app|kernel' >&2; exit 2 ;;
 esac
-# The hosted Ubuntu image uses mirror+file lists containing Azure first. Its
-# DNS failure can delay every package and poison mirror fallback; select the
-# canonical HTTPS Ubuntu mirrors explicitly on this disposable CI runner.
+# Select a reachable Ubuntu mirror before apt's slower package retries. APT
+# still verifies Ubuntu's signed Release metadata and every package hash.
+mirror=''
+for candidate in https://archive.ubuntu.com/ubuntu https://mirrors.edge.kernel.org/ubuntu https://mirrors.mit.edu/ubuntu https://mirrors.xtom.com/ubuntu; do
+  if curl -4 --fail --silent --show-error --location --max-time 8 "$candidate/dists/noble/InRelease" -o /tmp/minifuze-ci-inrelease 2>/tmp/minifuze-ci-mirror-error; then
+    if head -n 1 /tmp/minifuze-ci-inrelease | grep -q 'BEGIN PGP SIGNED MESSAGE'; then
+      mirror=$candidate
+      break
+    fi
+  fi
+  printf '::notice::Ubuntu mirror unavailable: %s\n' "$candidate"
+done
+if [[ -z $mirror ]]; then
+  printf '::error::No Ubuntu mirror reachable over HTTPS; runner DNS or outbound networking is unavailable.\n'
+  exit 1
+fi
+printf '::notice::Selected Ubuntu mirror: %s\n' "$mirror"
 if [[ -f /etc/apt/apt-mirrors.txt ]]; then
-  printf 'https://archive.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+  printf '%s/\n' "$mirror" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
 fi
 if [[ -f /etc/apt/apt-security-mirrors.txt ]]; then
-  printf 'https://security.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-security-mirrors.txt >/dev/null
+  printf '%s/\n' "$mirror" | sudo tee /etc/apt/apt-security-mirrors.txt >/dev/null
 fi
 log=$(mktemp)
 trap 'rm -f -- "$log"' EXIT
 apt_step() {
-  if timeout --signal=TERM --kill-after=10s 180s sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 "$@" 2>&1 | tee "$log"; then
+  if timeout --signal=TERM --kill-after=10s 180s sudo apt-get -o Acquire::ForceIPv4=true -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 "$@" 2>&1 | tee "$log"; then
     return
   fi
   {
