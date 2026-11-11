@@ -46,8 +46,8 @@ and MIDI enumeration are provided by Linux ALSA, not a replacement audio driver.
 
 | Target | Status |
 | --- | --- |
-| CachyOS, x86_64, kernel 7.3.0-2-cachyos, PipeWire 1.6.9, MiniFuse 2 firmware 1.5.0 | Built and tested on one physical interface |
-| Ubuntu 24.04 | Ubuntu CI build and isolated software tests are configured; no physical MiniFuse qualification |
+| CachyOS, x86_64, kernel 7.3.1-1-cachyos, PipeWire 1.6.10, MiniFuse 2 firmware 1.5.0 | Candidate built and measured on one physical interface |
+| Ubuntu 24.04 | CI build, isolated software/GTK tests and kernel compilation passed; no physical MiniFuse qualification |
 | Other Linux distributions | Expected to work with the dependencies below, but hardware, installer and kernel-module behavior still need testing on each distribution |
 | Windows and macOS | Not supported |
 

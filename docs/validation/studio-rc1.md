@@ -27,5 +27,9 @@ Additional physical loopback, same-port USB reconnect, switch readback and
 real user-service update results are documented in
 [hardware acceptance](../hardware-validation.md). Listening, DAW use,
 suspend recovery and broader configurations remain outside these checks.
-Ubuntu GitHub Actions and publication are tracked on the
-[release checklist](../../TODO.md).
+Ubuntu 24.04 application build, 28 tests, isolated GTK and source-archive
+round-trip, plus the separate kernel compilation job, passed in
+[GitHub Actions](https://github.com/Potato83/MiniFuze-for-Linux/actions/runs/43045195308).
+Runner package setup selects a reachable HTTPS mirror after Azure and the
+canonical archive host failed to resolve/respond; APT still checks Ubuntu's
+signed metadata. Publication is tracked on the [release checklist](../../TODO.md).

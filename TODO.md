@@ -7,7 +7,7 @@
 - [x] Names, Link and visibility without importing a Windows template.
 - [x] Local DSP, update/rollback, private service recovery and GTK checks.
 - [x] Versioned source/binary archives and checked prerelease workflow.
-- [ ] Confirm GitHub Actions on Ubuntu 24.04, including kernel compilation.
+- [x] Confirm GitHub Actions on Ubuntu 24.04, including kernel compilation.
 - [x] Measure the current C candidate through OUTPUT L → INPUT 2 at 48 kHz.
 - [x] Exercise software controls/presets and hardware switch readback on MiniFuse 2.
 - [x] Confirm same-port USB unplug/replug, owned-link repair and engine restart.
