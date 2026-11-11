@@ -8,6 +8,15 @@ case ${1:-} in
   kernel) packages=(build-essential linux-headers-generic) ;;
   *) echo 'Usage: ci_dependencies.sh app|kernel' >&2; exit 2 ;;
 esac
+# The hosted Ubuntu image uses mirror+file lists containing Azure first. Its
+# DNS failure can delay every package and poison mirror fallback; select the
+# canonical HTTPS Ubuntu mirrors explicitly on this disposable CI runner.
+if [[ -f /etc/apt/apt-mirrors.txt ]]; then
+  printf 'https://archive.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+fi
+if [[ -f /etc/apt/apt-security-mirrors.txt ]]; then
+  printf 'https://security.ubuntu.com/ubuntu/\n' | sudo tee /etc/apt/apt-security-mirrors.txt >/dev/null
+fi
 log=$(mktemp)
 trap 'rm -f -- "$log"' EXIT
 apt_step() {
@@ -29,5 +38,5 @@ apt_step() {
   printf '::error::APT failed: %s\n' "$details"
   return 1
 }
-apt_step update
+apt_step -o APT::Update::Error-Mode=any update
 apt_step install -y "${packages[@]}"
