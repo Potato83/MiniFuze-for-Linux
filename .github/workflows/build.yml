@@ -14,9 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libsoup-3.0-dev libjson-c-dev libmicrohttpd-dev libssl-dev pipewire-bin wireplumber xvfb fonts-dejavu-core desktop-file-utils
+        run: bash tools/ci_dependencies.sh app
       - name: Build
         run: make -j2 all build/desktop-smoke
       - name: Numeric and input-validation tests
@@ -55,9 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Kernel build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential linux-headers-generic
+        run: bash tools/ci_dependencies.sh kernel
       - name: Build module without loading it
         run: |
           headers=$(find /usr/src -maxdepth 1 -type d -name 'linux-headers-*-generic' | sort -V | tail -n 1)
