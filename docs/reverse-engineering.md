@@ -315,7 +315,7 @@ hardware checks still requires a MiniFuse 2 and suitable safe conditions.
 | Target | Status |
 | --- | --- |
 | CachyOS, x86_64, kernel 7.3.0-2-cachyos, PipeWire 1.6.9, MiniFuse 2 firmware 1.5.0 | Built and tested on one physical interface |
-| Ubuntu 24.04 | Ubuntu CI build and isolated software tests are configured; first GitHub run pending, no physical MiniFuse qualification |
+| Ubuntu 24.04 | Ubuntu CI build and isolated software tests are configured; no physical MiniFuse qualification |
 | Other Linux distributions | Expected to be portable when GTK 4.12+, libsoup 3, the listed development libraries, PipeWire and WirePlumber are available; hardware and installer behavior still need distribution-specific testing |
 | Linux kernel control module | Linux only; requires headers for the target kernel. DKMS support and kernel API compatibility vary by distribution/kernel |
 | Windows and macOS | Not supported by this application |

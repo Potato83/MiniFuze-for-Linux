@@ -21,7 +21,8 @@ class InstallTests(unittest.TestCase):
         script.write_text('''#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$TASK_SYSTEMCTL_LOG"
 case "${2:-}" in
-  is-active) exit 1 ;;
+  is-active) [[ ${TASK_ACTIVE:-0} == 1 ]] ;;
+  start) [[ ${TASK_FAIL_START:-0} == 0 ]] ;;
   enable) [[ ${TASK_FAIL_ENABLE:-0} == 0 ]] ;;
   *) exit 0 ;;
 esac
@@ -87,6 +88,46 @@ esac
         self.assertFalse(any(file.exists() for file in [*self.files, self.unit]))
         self.assertFalse((self.prefix/'share/minifuze2/owned-files').exists())
         self.assertFalse((self.prefix/'share/minifuze2/installed.sha256').exists())
+
+    def test_update_preserves_state_and_existing_desktop_configuration(self):
+        self.invoke('--reuse-existing')
+        preset = self.prefix/'share/minifuze2/my-preset.json'
+        preset.write_text('retained')
+        desktop = self.files[3].read_bytes()
+        self.invoke('--update')
+        self.assertEqual(preset.read_text(), 'retained')
+        self.assertEqual(self.files[3].read_bytes(), desktop)
+        self.assertEqual(self.files[0].read_bytes(), (ROOT/'build/minifuze2').read_bytes())
+        self.assertFalse(self.log.exists())
+        self.invoke('--uninstall')
+
+    def test_active_service_update_restarts_only_owned_engine(self):
+        self.invoke()
+        self.env['TASK_ACTIVE'] = '1'
+        self.invoke('--update')
+        calls = self.log.read_text()
+        self.assertIn('--user stop minifuze2.service', calls)
+        self.assertIn('--user start minifuze2.service', calls)
+        self.invoke('--uninstall')
+
+    def test_update_failure_restores_original_files_and_manifest(self):
+        self.invoke()
+        before = {file: file.read_bytes() for file in [*self.files, self.unit,
+                  self.prefix/'share/minifuze2/installed.sha256']}
+        self.env.update(TASK_ACTIVE='1', TASK_FAIL_START='1')
+        self.invoke('--update', success=False)
+        for file, content in before.items():
+            self.assertEqual(file.read_bytes(), content)
+        self.invoke('--uninstall')
+
+    def test_update_refuses_modified_files_and_mixed_modes(self):
+        self.invoke('--reuse-existing')
+        self.invoke('--update', '--reuse-existing', success=False)
+        with self.files[1].open('ab') as stream:
+            stream.write(b'changed')
+        before = self.files[1].read_bytes()
+        self.invoke('--update', success=False)
+        self.assertEqual(self.files[1].read_bytes(), before)
 
     def test_relative_prefix_refused(self):
         self.invoke('--prefix', 'relative', '--reuse-existing', success=False)

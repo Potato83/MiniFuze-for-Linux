@@ -44,8 +44,8 @@ static gboolean drive(gpointer unused) {
   Ui *u = &test_ui;
   if (++ticks > 600)
     g_error("Desktop integration test timed out at stage %d", stage);
-  if ((!u->connected && stage < 16) || u->busy || u->debounce || !g_queue_is_empty(&u->jobs) ||
-      ticks < 8)
+  if ((!u->connected && stage < 29) || u->busy || u->debounce ||
+      !g_queue_is_empty(&u->jobs) || ticks < 8)
     return G_SOURCE_CONTINUE;
   g_assert_null(get(u->state, "hardware"));
   g_assert_true(g_str_has_prefix(
@@ -198,7 +198,108 @@ static gboolean drive(gpointer unused) {
     gtk_window_set_default_size(GTK_WINDOW(u->window), 1024, 720);
     break;
   }
-  case 15: {
+  case 15:
+    command(u, "/api/factory", body());
+    break;
+  case 16:
+    g_assert_false(yes(get(get(u->state, "preset"), "has_template")));
+    g_assert_true(gtk_widget_get_sensitive(u->link));
+    g_assert_true(gtk_widget_get_sensitive(u->names[0]));
+    gtk_editable_set_text(GTK_EDITABLE(u->names[0]), "Гитара");
+    g_signal_emit_by_name(u->names[0], "activate");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(u->solo[2]), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(u->dim), TRUE);
+    break;
+  case 17:
+    g_assert_cmpstr(str(idx(get(get(u->state, "preset"), "input_names"), 0)),
+                    ==, "Гитара");
+    g_assert_true(yes(get(strip(0, 2), "solo")));
+    g_assert_true(yes(get(mix(0), "dim")));
+    gtk_editable_set_text(GTK_EDITABLE(u->gain_text[2]), "-11.2");
+    g_signal_emit_by_name(u->gain_text[2], "activate");
+    break;
+  case 18:
+    g_assert_cmpfloat_with_epsilon(val(get(strip(0, 2), "level_db")), -11.2,
+                                   1e-6);
+    g_signal_emit_by_name(u->undo, "clicked");
+    break;
+  case 19:
+    g_assert_cmpfloat(val(get(strip(0, 2), "level_db")), ==, 0);
+    g_signal_emit_by_name(u->redo, "clicked");
+    break;
+  case 20: {
+    g_assert_cmpfloat_with_epsilon(val(get(strip(0, 2), "level_db")), -11.2,
+                                   1e-6);
+    char *path = g_strconcat(report_path, ".json", NULL);
+    GFile *file = g_file_new_for_path(path);
+    queue(u, "/api/export-native", body(), file, 0);
+    g_object_unref(file);
+    g_free(path);
+    dispatch(u);
+    break;
+  }
+  case 21: {
+    char *path = g_strconcat(report_path, ".json", NULL);
+    if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
+      stage--;
+      g_free(path);
+      return G_SOURCE_CONTINUE;
+    }
+    g_free(path);
+    command(u, "/api/factory", body());
+    break;
+  }
+  case 22: {
+    char *path = g_strconcat(report_path, ".json", NULL), *contents = NULL;
+    gsize n = 0;
+    g_assert_true(g_file_get_contents(path, &contents, &n, NULL));
+    J *j = body();
+    text(j, "text", contents);
+    command(u, "/api/import-native", j);
+    g_free(contents);
+    g_free(path);
+    break;
+  }
+  case 23:
+    g_assert_cmpfloat_with_epsilon(val(get(strip(0, 2), "level_db")), -11.2,
+                                   1e-6);
+    g_assert_true(yes(get(strip(0, 2), "solo")));
+    g_assert_true(yes(get(mix(0), "dim")));
+    u->start_attempted = TRUE;
+    u->token[0] =
+        'x'; /* A rejected request must retain and retry the mixer draft. */
+    gtk_range_set_value(GTK_RANGE(u->gain[2]), -22);
+    break;
+  case 24:
+    g_assert_cmpfloat(val(get(strip(0, 2), "level_db")), ==, -22);
+    g_assert_null(u->draft);
+    gtk_editable_set_text(GTK_EDITABLE(u->gain_text[2]), "99");
+    g_signal_emit_by_name(u->gain_text[2], "activate");
+    g_assert_cmpfloat(gtk_range_get_value(GTK_RANGE(u->gain[2])), ==, -22);
+    g_signal_emit_by_name(u->save, "clicked");
+    break;
+  case 25:
+    g_assert_false(yes(get(u->state, "dirty")));
+    gtk_range_set_value(GTK_RANGE(u->gain[2]), -23);
+    break;
+  case 26:
+    g_signal_emit_by_name(u->undo, "clicked");
+    break;
+  case 27:
+    g_assert_false(yes(get(u->state, "dirty")));
+    g_assert_cmpfloat(val(get(strip(0, 2), "level_db")), ==, -22);
+    settings(NULL, u);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(u->theme), 0);
+    break;
+  case 28: {
+    char *path = g_strconcat(snapshot_path, ".light.png", NULL);
+    g_assert_true(save_snapshot(u->window, u->window, path));
+    g_free(path);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(u->theme), 1);
+    gtk_window_destroy(GTK_WINDOW(u->prefs));
+    break;
+  }
+  case 29: {
     char *path = g_strconcat(snapshot_path, ".small.png", NULL);
     g_assert_cmpint(gtk_widget_get_width(u->window), <=, 1024);
     gboolean ready = save_snapshot(u->window, u->window, path);
@@ -241,13 +342,14 @@ static gboolean drive(gpointer unused) {
       g_assert_false(restored.dark);
     }
     g_assert_true(captured);
-    g_assert_true(
-        g_file_set_contents(report_path,
-                            "{\"ok\":true,\"stages\":17,\"gtk_signals\":true,"
-                            "\"theme_switch_and_persistence\":true,"
-                            "\"small_window\":true,\"offline_states\":true,"
-                            "\"no_physical_routes\":true}\n",
-                            -1, NULL));
+    g_assert_true(g_file_set_contents(
+        report_path,
+        "{\"ok\":true,\"stages\":31,\"gtk_signals\":true,"
+        "\"theme_switch_and_persistence\":true,"
+        "\"small_window\":true,\"offline_states\":true,"
+        "\"studio_controls\":true,\"native_presets\":true,\"draft_recovery\":"
+        "true,\"no_physical_routes\":true}\n",
+        -1, NULL));
     gtk_window_close(GTK_WINDOW(u->window));
     return G_SOURCE_REMOVE;
   }

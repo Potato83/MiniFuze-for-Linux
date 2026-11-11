@@ -1,88 +1,91 @@
 /* SPDX-License-Identifier: MIT */
-/* Shared palette: physical silver housing, cyan controls, amber mute state. */
-@define-color mf_canvas #edf1f3;
-@define-color mf_surface #ffffff;
-@define-color mf_sidebar #e6ecef;
-@define-color mf_text #243640;
-@define-color mf_hint #536974;
-@define-color mf_line #c5d1d8;
-@define-color mf_accent #087e99;
-@define-color mf_accent_soft #e3f3f7;
-@define-color mf_warning #74420e;
-@define-color mf_warning_bg #fff0cf;
-@define-color mf_error #a12c28;
-@define-color mf_accent_text #06657b;
-@define-color mf_toolbar #f7f9fa;
-@define-color mf_control_border #aabdc8;
-@define-color mf_hover #edf7fa;
-@define-color mf_hover_border #548a9c;
-@define-color mf_pressed #cee8ef;
-@define-color mf_accent_hover #066b83;
-@define-color mf_warning_border #b77b2f;
-@define-color mf_warning_hover #ffe6af;
-@define-color mf_disabled_text #657984;
-@define-color mf_disabled_bg #e3e9ed;
-@define-color mf_disabled_line #c3cfd6;
-@define-color mf_check_border #708995;
-@define-color mf_track #d4dfe5;
-@define-color mf_slider_border #4c6d7d;
-@define-color mf_fader_fill #a3b9c4;
-@define-color mf_slider_disabled #9bafb9;
-@define-color mf_scroll #91a4af;
-@define-color mf_connected #127d64;
-window { background: @mf_canvas; color: @mf_text; font-family: "Noto Sans", sans-serif; font-size: 14px; }
+/* Studio: quiet channel surfaces, silver faders, signal-first meters. */
+@define-color mf_canvas #edf0f3;
+@define-color mf_surface #fafbfc;
+@define-color mf_sidebar #e4e8ed;
+@define-color mf_text #27303a;
+@define-color mf_hint #596774;
+@define-color mf_line #cbd2da;
+@define-color mf_accent #247aa7;
+@define-color mf_accent_soft #e0edf5;
+@define-color mf_warning #70470c;
+@define-color mf_warning_bg #f9e6bf;
+@define-color mf_error #a72f36;
+@define-color mf_accent_text #1b6389;
+@define-color mf_toolbar #e7ebef;
+@define-color mf_control_border #bac5cf;
+@define-color mf_hover #e7eef4;
+@define-color mf_hover_border #739db8;
+@define-color mf_pressed #d1e3ef;
+@define-color mf_accent_hover #20688e;
+@define-color mf_warning_border #b78b40;
+@define-color mf_warning_hover #f4d89d;
+@define-color mf_disabled_text #687581;
+@define-color mf_disabled_bg #e1e6eb;
+@define-color mf_disabled_line #c9d0d7;
+@define-color mf_check_border #8998a6;
+@define-color mf_track #c5ced7;
+@define-color mf_slider_border #687c8f;
+@define-color mf_fader_fill #99aaba;
+@define-color mf_scroll #95a4b2;
+@define-color mf_connected #227153;
+window { background: @mf_canvas; color: @mf_text; font-family: "Noto Sans", sans-serif; font-size: 13px; }
 stack, scrolledwindow, viewport { background: @mf_canvas; color: @mf_text; }
-headerbar { background: @mf_surface; color: @mf_text; border-bottom: 1px solid @mf_line; padding: 8px 12px; }
-.brand { font-size: 20px; font-weight: 700; }
-.subtitle, .hint { color: @mf_hint; font-size: 12px; opacity: 1; }
-.sidebar { background: @mf_sidebar; padding: 16px; border-right: 1px solid @mf_line; }
-.sidebar .section { margin-top: 8px; }
-.section { font-size: 14px; font-weight: 700; }
-.strip { background: @mf_surface; padding: 16px 12px; border-right: 1px solid @mf_line; }
-.master { background: @mf_accent_soft; border-left: 2px solid @mf_accent; }
-.strip-title { font-size: 14px; font-weight: 700; }
-.tabs { padding: 12px 16px; background: @mf_surface; border-bottom: 1px solid @mf_line; }
+headerbar { background: @mf_surface; color: @mf_text; border-bottom: 1px solid @mf_line; padding: 5px 10px; min-height: 38px; }
+.brand { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+.hint, .subtitle { color: @mf_hint; font-size: 11px; opacity: 1; }
+.section { font-size: 13px; font-weight: 600; }
+.tabs { padding: 6px 12px; background: @mf_toolbar; border-bottom: 1px solid @mf_line; }
 .tabs button { background: transparent; border-color: transparent; box-shadow: none; }
-.tabs button:checked { background: @mf_accent_soft; color: @mf_accent_text; border-color: @mf_accent; border-bottom-width: 3px; font-weight: 700; }
-.mixbar { padding: 12px 16px; background: @mf_toolbar; color: @mf_text; border-bottom: 1px solid @mf_line; }
-.mixer-workspace { background: @mf_canvas; color: @mf_text; }
-.gain { font-size: 16px; font-weight: 700; font-feature-settings: "tnum"; }
-.footer { padding: 8px 16px; background: @mf_toolbar; border-top: 1px solid @mf_line; }
+.tabs button:checked { background: @mf_surface; color: @mf_accent_text; border-color: @mf_line; border-bottom: 2px solid @mf_accent; font-weight: 600; }
+.mixbar { padding: 7px 12px; background: @mf_surface; border-bottom: 1px solid @mf_line; }
+.mixbar entry { background: transparent; border-color: transparent; }
+.mixbar entry:focus-within { background: @mf_canvas; border-color: @mf_accent; }
+.strip { background: @mf_surface; padding: 12px 8px 10px; border-right: 1px solid @mf_line; }
+.strip-title { font-size: 12px; font-weight: 600; }
+.strip entry:not(.gain) { font-size: 11px; background: transparent; border-color: transparent; }
+.strip entry:not(.gain):focus-within { background: @mf_canvas; border-color: @mf_accent; }
+.master { background: @mf_accent_soft; border-left: 2px solid @mf_accent; border-right: 0; }
+.gain, .gain-label { font-size: 15px; font-weight: 600; font-feature-settings: "tnum"; }
+entry.gain { background: @mf_canvas; padding: 2px 3px; min-height: 24px; }
+.hardware-bar { padding: 7px 12px; background: @mf_toolbar; border-top: 1px solid @mf_line; }
+.footer { padding: 5px 12px; background: @mf_surface; border-top: 1px solid @mf_line; }
 .error { color: @mf_error; }
 .connected { color: @mf_connected; }
-button.control, dropdown button { border-radius: 6px; padding: 6px 10px; background: @mf_surface; background-image: none; color: @mf_text; border: 1px solid @mf_control_border; box-shadow: none; }
-button.control:hover, dropdown button:hover { background: @mf_hover; border-color: @mf_hover_border; }
-button.control:active, dropdown button:active { background: @mf_pressed; }
-button:checked, button.suggested-action { background: @mf_accent; color: white; }
+button.control, dropdown button, .toolbar-menu > button { border-radius: 4px; padding: 5px 8px; min-height: 22px; background: @mf_surface; background-image: none; color: @mf_text; border: 1px solid @mf_control_border; box-shadow: none; font-size: 12px; }
+.strip button.control { padding: 4px 6px; }
+button.control:hover, dropdown button:hover, .toolbar-menu > button:hover { background: @mf_hover; border-color: @mf_hover_border; }
+button.control:active { background: @mf_pressed; }
+button.control:checked, button.suggested-action { background: @mf_accent; color: white; border-color: @mf_accent; }
 button.suggested-action:hover { background: @mf_accent_hover; }
-button.mute:checked { background: @mf_warning_bg; color: @mf_warning; border-color: @mf_warning_border; font-weight: 700; }
+button.mute:checked { background: @mf_warning_bg; color: @mf_warning; border-color: @mf_warning_border; font-weight: 600; }
 button.mute:checked:hover { background: @mf_warning_hover; }
+button.solo:checked { background: @mf_accent_soft; color: @mf_accent_text; border-color: @mf_accent; font-weight: 600; }
 button.destructive-action:checked { background: @mf_error; color: white; }
-button.destructive-action { background: @mf_surface; color: @mf_error; }
-button.control:disabled, dropdown button:disabled, button.destructive-action:disabled { color: @mf_disabled_text; background: @mf_disabled_bg; border-color: @mf_disabled_line; }
+button.destructive-action { color: @mf_error; }
+button.control:disabled, dropdown button:disabled, .toolbar-menu > button:disabled { color: @mf_disabled_text; background: @mf_disabled_bg; border-color: @mf_disabled_line; }
 button:focus-visible, entry:focus-within, dropdown:focus-visible, checkbutton:focus-visible, scale:focus-visible { outline: 2px solid @mf_accent; outline-offset: 2px; }
-entry { min-height: 26px; border-radius: 6px; padding: 2px 8px; background: @mf_toolbar; color: @mf_text; border: 1px solid @mf_control_border; }
+entry { min-height: 24px; border-radius: 4px; padding: 2px 6px; background: @mf_canvas; color: @mf_text; border: 1px solid @mf_control_border; }
 entry:disabled { color: @mf_disabled_text; background: @mf_canvas; border-color: @mf_line; }
-checkbutton { color: @mf_text; }
+checkbutton { color: @mf_text; font-size: 12px; }
 checkbutton check { background: @mf_surface; border: 1px solid @mf_check_border; }
 checkbutton check:checked { background: @mf_accent; color: white; }
 checkbutton:disabled { color: @mf_disabled_text; }
-.strip entry { font-size: 12px; }
-scale { padding: 4px; }
-scale trough { min-width: 4px; min-height: 4px; background: @mf_track; border-radius: 3px; }
+scale { padding: 3px; }
+scale trough { min-width: 3px; min-height: 3px; background: @mf_track; border-radius: 2px; }
 scale highlight { background: @mf_accent; }
-scale slider { background: @mf_surface; border: 1px solid @mf_slider_border; min-width: 14px; min-height: 14px; padding: 0; margin: 0; }
-scale.vertical trough { min-width: 4px; }
+scale slider { background: @mf_surface; border: 1px solid @mf_slider_border; min-width: 10px; min-height: 10px; padding: 0; margin: 0; }
+.strip scale.horizontal highlight { background: @mf_fader_fill; }
+scale.vertical trough { min-width: 3px; }
 scale.vertical highlight { background: @mf_fader_fill; }
-scale.vertical slider { min-width: 26px; min-height: 12px; margin: 0 -11px; border-radius: 3px; }
-scale:disabled slider { background: @mf_disabled_bg; border-color: @mf_slider_disabled; }
+scale.vertical slider { background: #d4dbe3; min-width: 24px; min-height: 11px; margin: 0 -11px; border-radius: 2px; }
+scale:disabled slider { background: @mf_disabled_bg; border-color: @mf_disabled_line; }
 dropdown { font-size: 12px; }
 scrollbar { padding: 0; }
-scrollbar slider { min-width: 12px; min-height: 30px; border: 0; padding: 0; margin: 0; background: @mf_scroll; }
-scrollbar.horizontal slider { min-width: 30px; min-height: 12px; }
-.input-card { background: @mf_surface; padding: 24px; border-right: 1px solid @mf_line; }
-.settings-content .section { font-size: 16px; margin-top: 8px; }
-
-/* Keep native window controls visible under themes that hide symbolic images. */
+scrollbar slider { min-width: 9px; min-height: 24px; border: 0; padding: 0; margin: 0; background: @mf_scroll; }
+scrollbar.horizontal slider { min-width: 24px; min-height: 9px; }
+.input-card { background: @mf_surface; padding: 18px; border-right: 1px solid @mf_line; }
+.settings-content .section { font-size: 15px; margin-top: 8px; }
+popover > contents { background: @mf_surface; color: @mf_text; border: 1px solid @mf_line; border-radius: 7px; }
 headerbar windowcontrols button { background-image: none; }
 headerbar windowcontrols button image { color: @mf_text; }

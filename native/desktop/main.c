@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #include "desktop_assets.h"
+#include "version.h"
 #include <gtk/gtk.h>
 #include <json-c/json.h>
 #include <libsoup/soup.h>
@@ -20,6 +21,7 @@ typedef struct {
       *reconnect;
   GtkWidget *tabs[4], *pages, *link, *device, *route, *firmware;
   GtkWidget *hardware[7], *save, *load, *export_button;
+  GtkWidget *undo, *redo, *solo[6], *master_mute, *dim;
   GtkWidget *strips[7], *names[7], *gain[7], *gain_text[7], *mute[6];
   GtkWidget *pan[6][2], *refs[7], *ref_reset[7], *meters[7], *peaks[7],
       *visible[3];
@@ -156,9 +158,11 @@ static GtkWidget *dropdown(const char *const *items) {
                : gtk_drop_down_new(NULL, NULL);
 }
 static char *theme_path(void) {
-  return g_build_filename(g_get_user_config_dir(), "minifuze2", "desktop.ini", NULL);
+  return g_build_filename(g_get_user_config_dir(), "minifuze2", "desktop.ini",
+                          NULL);
 }
 static void load_theme(Ui *u) {
+  u->dark = TRUE;
   char *path = theme_path();
   GKeyFile *file = g_key_file_new();
   if (g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, NULL))
@@ -172,7 +176,8 @@ static void apply_theme(Ui *u) {
       G_OBJECT_GET_CLASS(prefs), "gtk-interface-color-scheme");
   if (scheme) {
     GEnumClass *values = g_type_class_ref(G_PARAM_SPEC_VALUE_TYPE(scheme));
-    GEnumValue *value = g_enum_get_value_by_nick(values, u->dark ? "dark" : "light");
+    GEnumValue *value =
+        g_enum_get_value_by_nick(values, u->dark ? "dark" : "light");
     if (value)
       g_object_set(prefs, "gtk-interface-color-scheme", value->value, NULL);
     g_type_class_unref(values);
@@ -205,9 +210,9 @@ static void theme_changed(GObject *unused, GParamSpec *spec, gpointer data) {
   if (g_mkdir_with_parents(directory, 0700) != 0)
     notice(u, "Не удалось создать папку настроек темы", TRUE);
   else if (!g_file_set_contents_full(path, contents, (gssize)length,
-                                      G_FILE_SET_CONTENTS_CONSISTENT |
-                                          G_FILE_SET_CONTENTS_DURABLE,
-                                      0600, &error)) {
+                                     G_FILE_SET_CONTENTS_CONSISTENT |
+                                         G_FILE_SET_CONTENTS_DURABLE,
+                                     0600, &error)) {
     notice(u, error->message, TRUE);
     g_clear_error(&error);
   }
@@ -300,7 +305,8 @@ static void queue(Ui *u, const char *path, J *b, GFile *file, guint revision) {
 static void command(Ui *u, const char *path, J *b) {
   flush_mixer(u);
   if (!strcmp(path, "/api/load") || !strcmp(path, "/api/factory") ||
-      !strcmp(path, "/api/import-mfp"))
+      !strcmp(path, "/api/import-mfp") || !strcmp(path, "/api/import-native") ||
+      !strcmp(path, "/api/undo") || !strcmp(path, "/api/redo"))
     u->replacing = TRUE;
   queue(u, path, b, NULL, 0);
   if (u->replacing)
@@ -371,6 +377,59 @@ static void mute_changed(GtkToggleButton *b, gpointer data) {
   edited(u);
   flush_mixer(u);
   dispatch(u);
+}
+static void listen_changed(GtkToggleButton *b, gpointer data) {
+  Ui *u = data;
+  if (u->rendering)
+    return;
+  J *m = edit_mix(u);
+  if (!m || json_object_get_int(get(u->draft, "version")) < 2)
+    return;
+  int source = widget_id(b, "source");
+  const char *key = g_object_get_data(G_OBJECT(b), "field");
+  boolean(source == 6 ? m : idx(get(m, "strips"), source), key,
+          gtk_toggle_button_get_active(b));
+  edited(u);
+  flush_mixer(u);
+  dispatch(u);
+}
+static void gain_entered(GtkEntry *entry, gpointer data) {
+  Ui *u = data;
+  const char *s = gtk_editable_get_text(GTK_EDITABLE(entry));
+  char *end = NULL;
+  double value = g_ascii_strtod(s, &end);
+  while (end && g_ascii_isspace(*end))
+    end++;
+  if (end == s || !end || *end || !isfinite(value) || value < -60 ||
+      value > 0) {
+    notice(u, "Введи уровень от −60 до 0 dB, например −12.5", TRUE);
+    return;
+  }
+  gtk_range_set_value(GTK_RANGE(u->gain[widget_id(entry, "source")]), value);
+}
+static void reset_control(GtkGestureClick *gesture, int presses, double x,
+                          double y, gpointer data) {
+  (void)data;
+  (void)x;
+  (void)y;
+  if (presses != 2)
+    return;
+  GtkWidget *w = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+  int pan = widget_id(w, "pan"), source = widget_id(w, "source");
+  gtk_range_set_value(GTK_RANGE(w), pan ? source < 2 ? .5
+                                          : pan == 1 ? 0
+                                                     : 1
+                                        : 0);
+  gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+}
+static void add_reset(GtkWidget *w) {
+  GtkGesture *gesture = gtk_gesture_click_new();
+  gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(gesture),
+                                             GTK_PHASE_CAPTURE);
+  g_signal_connect(gesture, "pressed", G_CALLBACK(reset_control), NULL);
+  gtk_widget_add_controller(w, GTK_EVENT_CONTROLLER(gesture));
+  gtk_widget_set_tooltip_text(
+      w, "Двойной щелчок — сброс; стрелки — точная настройка");
 }
 static void hardware_changed(GtkToggleButton *b, gpointer data) {
   Ui *u = data;
@@ -501,13 +560,13 @@ static void meters_draw(GtkDrawingArea *area, cairo_t *cr, int width,
   for (int tick = 0; tick <= 60; tick += 12) {
     double y = top + h * tick / 60.0;
     cairo_set_source_rgb(cr, u->dark ? .30 : .73, u->dark ? .38 : .78,
-                          u->dark ? .43 : .8);
+                         u->dark ? .43 : .8);
     cairo_set_line_width(cr, .5);
     cairo_move_to(cr, left - 5, y);
     cairo_line_to(cr, left + channels * (w + gap), y);
     cairo_stroke(cr);
     cairo_set_source_rgb(cr, u->dark ? .68 : .4, u->dark ? .76 : .47,
-                          u->dark ? .81 : .5);
+                         u->dark ? .81 : .5);
     char s[32];
     snprintf(s, sizeof s, "%d", -tick);
     cairo_move_to(cr, 2, y + 3);
@@ -519,7 +578,7 @@ static void meters_draw(GtkDrawingArea *area, cairo_t *cr, int width,
            v = active ? val(idx(levels, offset + ch)) : 0;
     double fraction = CLAMP((db(v) + 60) / 60, 0, 1);
     cairo_set_source_rgb(cr, u->dark ? .04 : .13, u->dark ? .08 : .2,
-                          u->dark ? .10 : .24);
+                         u->dark ? .10 : .24);
     cairo_rectangle(cr, x, top, w, h);
     cairo_fill(cr);
     if (yes(idx(clips, offset + ch)))
@@ -552,7 +611,7 @@ static GtkWidget *meter(Ui *u, int source, gboolean input) {
   GtkWidget *w = gtk_drawing_area_new();
   tag(w, "source", source);
   tag(w, "input", input);
-  gtk_widget_set_size_request(w, 68, 208);
+  gtk_widget_set_size_request(w, 62, 180);
   gtk_widget_set_vexpand(w, TRUE);
   gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(w), meters_draw, u, NULL);
   return w;
@@ -569,38 +628,43 @@ static void render(Ui *u) {
   J *s = u->state, *preset = get(s, "preset"), *device = get(s, "device"),
     *audio = get(s, "audio");
   gboolean online = u->connected && s,
-           template = online && yes(get(preset, "has_template"));
+           template = online && yes(get(preset, "has_template")),
+           editable = online && (yes(get(preset, "editable")) || template);
   gtk_widget_set_sensitive(u->workspace, online && !u->replacing);
   gtk_widget_set_sensitive(u->save, online && !u->replacing);
   gtk_widget_set_sensitive(u->load,
                            online && !u->replacing && yes(get(s, "has_saved")));
   gtk_widget_set_sensitive(u->export_button, template);
-  gtk_label_set_text(GTK_LABEL(u->dirty), u->draft || yes(get(s, "dirty"))
-                                              ? "Есть несохранённые изменения"
-                                          : yes(get(s, "has_saved"))
-                                              ? "Микс сохранён"
-                                              : "Заводской микс");
+  gtk_widget_set_sensitive(u->undo,
+                           online && !u->replacing && yes(get(s, "can_undo")));
+  gtk_widget_set_sensitive(u->redo,
+                           online && !u->replacing && yes(get(s, "can_redo")));
+  gtk_label_set_text(GTK_LABEL(u->dirty),
+                     u->draft || yes(get(s, "dirty")) ? "Микс изменён"
+                     : yes(get(s, "has_saved"))       ? "Микс сохранён"
+                                                      : "Заводской микс");
   char status[256];
   if (online && get(s, "hardware"))
-    snprintf(status, sizeof status, "MiniFuse подключена · %.0f Гц",
-             val(get(audio, "actual_rate")));
+    snprintf(status, sizeof status, "Подключена · %.0f Гц · буфер %s",
+             val(get(audio, "actual_rate")),
+             val(get(audio, "requested_quantum")) ? "ручной" : "Auto");
   else
     snprintf(status, sizeof status, "%s",
              online ? yes(get(s, "route_selected"))
                           ? "Ожидаем подключения MiniFuse"
-                          : "Выбери MiniFuse слева"
+                          : "Программный микшер · карта не выбрана"
                     : "Аудиослужба недоступна");
   gtk_label_set_text(GTK_LABEL(u->status), status);
   gtk_widget_set_visible(u->reconnect, !online);
-  gtk_widget_set_sensitive(u->link, template);
+  gtk_widget_set_sensitive(u->link, editable);
   gtk_check_button_set_active(GTK_CHECK_BUTTON(u->link),
                               yes(idx(get(preset, "links"), u->mix)));
-  gtk_widget_set_sensitive(u->mix_name, template);
+  gtk_widget_set_sensitive(u->mix_name, editable);
   entry_update(u->mix_name, str(idx(get(preset, "mix_names"), u->mix)));
   J *mix = idx(get(u->draft ? u->draft : get(s, "mixer"), "mixes"), u->mix);
   for (int i = 0; i < 7; i++) {
     gboolean visible =
-        i < 3 || i == 6 || !template ||
+        i < 3 || i == 6 || !editable ||
         yes(idx(idx(get(preset, "virtual_visible"), u->mix), i - 3));
     gtk_widget_set_visible(u->strips[i], visible);
     if (i < 6) {
@@ -614,7 +678,12 @@ static void render(Ui *u) {
       for (int ch = 0; ch < (i < 2 ? 1 : 2); ch++)
         gtk_range_set_value(GTK_RANGE(u->pan[i][ch]),
                             val(idx(get(strip, "pans"), ch)));
-      gtk_widget_set_sensitive(u->names[i], template);
+      gtk_widget_set_sensitive(u->names[i], editable);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(u->solo[i]),
+                                   yes(get(strip, "solo")));
+      gtk_widget_set_sensitive(
+          u->solo[i],
+          json_object_get_int(get(get(s, "mixer"), "version")) >= 2);
       entry_update(u->names[i], str(idx(get(preset, "input_names"), i)));
     } else
       gtk_range_set_value(GTK_RANGE(u->gain[i]), val(get(mix, "master_db")));
@@ -624,7 +693,8 @@ static void render(Ui *u) {
       snprintf(value, sizeof value, "−∞ dB");
     else
       snprintf(value, sizeof value, "%.1f dB", level);
-    gtk_label_set_text(GTK_LABEL(u->gain_text[i]), value);
+    snprintf(value, sizeof value, "%.1f", level);
+    entry_update(u->gain_text[i], value);
     J *ref = idx(idx(get(get(s, "peakref"), "db"), u->mix), i);
     guint selected = GTK_INVALID_LIST_POSITION;
     if (u->ref_pending[u->mix][i]) {
@@ -657,11 +727,19 @@ static void render(Ui *u) {
     gtk_label_set_text(GTK_LABEL(u->peaks[i]), value);
     gtk_widget_queue_draw(u->meters[i]);
   }
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(u->master_mute),
+                               yes(get(mix, "master_mute")));
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(u->dim), yes(get(mix, "dim")));
+  gtk_widget_set_sensitive(
+      u->master_mute,
+      json_object_get_int(get(get(s, "mixer"), "version")) >= 2);
+  gtk_widget_set_sensitive(
+      u->dim, json_object_get_int(get(get(s, "mixer"), "version")) >= 2);
   for (int i = 0; i < 3; i++) {
-    gtk_widget_set_sensitive(u->visible[i], template);
+    gtk_widget_set_sensitive(u->visible[i], editable);
     gtk_check_button_set_active(
         GTK_CHECK_BUTTON(u->visible[i]),
-        !template || yes(idx(idx(get(preset, "virtual_visible"), u->mix), i)));
+        !editable || yes(idx(idx(get(preset, "virtual_visible"), u->mix), i)));
   }
   for (int i = 0; i < 7; i++) {
     gboolean supported = online && yes(get(device, "ok")) &&
@@ -725,8 +803,9 @@ static void render(Ui *u) {
   if (u->audio_info) {
     char info[256];
     if (!online)
-      snprintf(info, sizeof info, "Аудиослужба недоступна. Выбранные значения "
-                                   "ещё не применены.");
+      snprintf(info, sizeof info,
+               "Аудиослужба недоступна. Выбранные значения "
+               "ещё не применены.");
     else if (val(get(audio, "actual_rate")) <= 0)
       snprintf(info, sizeof info, "Текущая частота недоступна\n%s",
                str(get(audio, "error")));
@@ -751,7 +830,7 @@ static void exported(GObject *source, GAsyncResult *res, gpointer data) {
   Export *e = data;
   GError *error = NULL;
   if (g_file_replace_contents_finish(G_FILE(source), res, NULL, &error))
-    notice(e->ui, "Пресет .mfp сохранён", FALSE);
+    notice(e->ui, "Файл пресета сохранён", FALSE);
   else {
     notice(e->ui, error->message, TRUE);
     g_clear_error(&error);
@@ -844,7 +923,16 @@ static void request_done(GObject *source, GAsyncResult *res, gpointer data) {
                       : error ? error->message
                               : "Некорректный ответ аудиослужбы";
     notice(u, *why ? why : "Аудиослужба недоступна", TRUE);
+    /* Only the mixer snapshot is idempotent across a lost connection. Keep
+     * that draft; discard queued hardware commands instead of replaying them.
+     */
+    J *draft =
+        (error || code == 403 || code >= 500 || r->kind == 0) ? u->draft : NULL;
+    if (draft)
+      u->draft = NULL;
     clear_jobs(u);
+    u->draft = draft;
+    u->sent_revision = 0;
     if (error || code == 403 || r->kind == 0) {
       u->token[0] = 0;
       u->connected = FALSE;
@@ -860,12 +948,17 @@ static void request_done(GObject *source, GAsyncResult *res, gpointer data) {
   g_clear_error(&error);
   if (r->job && (!strcmp(r->job->path, "/api/load") ||
                  !strcmp(r->job->path, "/api/factory") ||
-                 !strcmp(r->job->path, "/api/import-mfp")))
+                 !strcmp(r->job->path, "/api/import-mfp") ||
+                 !strcmp(r->job->path, "/api/import-native") ||
+                 !strcmp(r->job->path, "/api/undo") ||
+                 !strcmp(r->job->path, "/api/redo")))
     u->replacing = FALSE;
   job_free(r->job);
   g_object_unref(r->message);
   g_free(r);
   u->busy = FALSE;
+  if (ok && u->connected && u->draft)
+    flush_mixer(u);
   render(u);
   if (u->closing && g_queue_is_empty(&u->jobs) && !u->draft) {
     gtk_window_destroy(GTK_WINDOW(u->window));
@@ -923,12 +1016,15 @@ static void loaded_file(GObject *source, GAsyncResult *res, gpointer data) {
   gsize n = 0;
   GError *error = NULL;
   if (g_file_load_contents_finish(G_FILE(source), res, &s, &n, NULL, &error)) {
-    if (n > 32768 || memchr(s, 0, n) || !g_utf8_validate(s, (gssize)n, NULL))
-      notice(u, "Нужен UTF-8 пресет .mfp размером до 32 КиБ", TRUE);
+    if (n > 65536 || memchr(s, 0, n) || !g_utf8_validate(s, (gssize)n, NULL))
+      notice(u, "Нужен UTF-8 пресет .json или .mfp размером до 64 КиБ", TRUE);
     else {
       J *j = body();
       text(j, "text", s);
-      command(u, "/api/import-mfp", j);
+      const char *first = s;
+      while (g_ascii_isspace(*first))
+        first++;
+      command(u, *first == '{' ? "/api/import-native" : "/api/import-mfp", j);
     }
   } else {
     notice(u, error->message, TRUE);
@@ -953,7 +1049,10 @@ static void chosen_save(GObject *source, GAsyncResult *res, gpointer data) {
   GFile *f = gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), res, &error);
   if (f) {
     flush_mixer(u);
-    queue(u, "/api/export-mfp", body(), f, 0);
+    queue(u,
+          g_object_get_data(source, "native") ? "/api/export-native"
+                                              : "/api/export-mfp",
+          body(), f, 0);
     g_object_unref(f);
     dispatch(u);
   }
@@ -966,8 +1065,9 @@ static void open_preset(GtkButton *unused, gpointer data) {
   GtkFileDialog *dialog = gtk_file_dialog_new();
   gtk_file_dialog_set_title(dialog, "Открыть пресет MiniFuse");
   GtkFileFilter *filter = gtk_file_filter_new();
-  gtk_file_filter_set_name(filter, "MiniFuse preset (*.mfp)");
+  gtk_file_filter_set_name(filter, "MiniFuse presets (*.json, *.mfp)");
   gtk_file_filter_add_pattern(filter, "*.mfp");
+  gtk_file_filter_add_pattern(filter, "*.json");
   GListStore *filters = g_list_store_new(GTK_TYPE_FILE_FILTER);
   g_list_store_append(filters, filter);
   gtk_file_dialog_set_filters(dialog, G_LIST_MODEL(filters));
@@ -976,11 +1076,13 @@ static void open_preset(GtkButton *unused, gpointer data) {
   gtk_file_dialog_open(dialog, GTK_WINDOW(u->window), NULL, chosen_open, u);
 }
 static void export_preset(GtkButton *unused, gpointer data) {
-  (void)unused;
   Ui *u = data;
   GtkFileDialog *dialog = gtk_file_dialog_new();
   gtk_file_dialog_set_title(dialog, "Сохранить пресет MiniFuse");
-  gtk_file_dialog_set_initial_name(dialog, "MiniFuse2.mfp");
+  gboolean native = unused && g_object_get_data(G_OBJECT(unused), "native");
+  g_object_set_data(G_OBJECT(dialog), "native", GINT_TO_POINTER(native));
+  gtk_file_dialog_set_initial_name(dialog,
+                                   native ? "MiniFuse2.json" : "MiniFuse2.mfp");
   gtk_file_dialog_save(dialog, GTK_WINDOW(u->window), NULL, chosen_save, u);
 }
 static void apply_audio(GtkButton *unused, gpointer data) {
@@ -1028,7 +1130,7 @@ static void field(GtkWidget *b, const char *s, GtkWidget *w) {
   add(b, l);
   add(b, w);
   gtk_accessible_update_property(GTK_ACCESSIBLE(w),
-                                  GTK_ACCESSIBLE_PROPERTY_LABEL, s, -1);
+                                 GTK_ACCESSIBLE_PROPERTY_LABEL, s, -1);
 }
 static void settings(GtkButton *unused, gpointer data) {
   (void)unused;
@@ -1057,7 +1159,7 @@ static void settings(GtkButton *unused, gpointer data) {
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), b);
   gtk_window_set_child(GTK_WINDOW(u->prefs), scroll);
   add(b, label("Оформление", "section"));
-  const char *themes[] = {"Светлая", "Тёмная", NULL};
+  const char *themes[] = {"Светлая студия", "Тёмная студия", NULL};
   u->theme = dropdown(themes);
   gtk_drop_down_set_selected(GTK_DROP_DOWN(u->theme), u->dark ? 1 : 0);
   g_signal_connect(u->theme, "notify::selected", G_CALLBACK(theme_changed), u);
@@ -1119,126 +1221,181 @@ static void settings(GtkButton *unused, gpointer data) {
   for (guint i = 0; i < G_N_ELEMENTS(peak_values); i++)
     if (!strcmp(peak_values[i], str(get(prefs, "peak_reset"))))
       gtk_drop_down_set_selected(GTK_DROP_DOWN(u->peak), i);
-  u->meters_apply = button("Сохранить настройки индикаторов",
-                            G_CALLBACK(apply_meters), u);
+  u->meters_apply =
+      button("Сохранить настройки индикаторов", G_CALLBACK(apply_meters), u);
   add(b, u->meters_apply);
-  add(b, label("MiniFuse 2 for Linux · 0.1.0-preview\nНезависимый проект, не "
+  add(b, label("MiniFuse 2 for Linux · " MF_VERSION "\nНезависимый проект, не "
                "приложение Arturia.",
                "hint"));
   render(u);
   gtk_window_present(GTK_WINDOW(u->prefs));
 }
+static GtkWidget *popover_button(const char *title, GtkWidget **content) {
+  GtkWidget *menu = gtk_menu_button_new(), *popover = gtk_popover_new();
+  gtk_menu_button_set_label(GTK_MENU_BUTTON(menu), title);
+  gtk_widget_add_css_class(menu, "toolbar-menu");
+  *content = box(GTK_ORIENTATION_VERTICAL, 8);
+  gtk_widget_set_margin_start(*content, 12);
+  gtk_widget_set_margin_end(*content, 12);
+  gtk_widget_set_margin_top(*content, 12);
+  gtk_widget_set_margin_bottom(*content, 12);
+  gtk_popover_set_child(GTK_POPOVER(popover), *content);
+  gtk_menu_button_set_popover(GTK_MENU_BUTTON(menu), popover);
+  return menu;
+}
+static GtkWidget *listen_button(Ui *u, const char *title, int source,
+                                const char *key) {
+  GtkWidget *w = gtk_toggle_button_new_with_label(title);
+  gtk_widget_add_css_class(w, "control");
+  gtk_widget_add_css_class(w, !strcmp(key, "solo") ? "solo" : "mute");
+  tag(w, "source", source);
+  g_object_set_data(G_OBJECT(w), "field", (gpointer)key);
+  char description[128];
+  snprintf(description, sizeof description, "%s · %s", strip_names[source],
+           title);
+  gtk_widget_set_tooltip_text(w, description);
+  gtk_accessible_update_property(
+      GTK_ACCESSIBLE(w), GTK_ACCESSIBLE_PROPERTY_LABEL, description, -1);
+  g_signal_connect(w, "toggled", G_CALLBACK(listen_changed), u);
+  gtk_widget_set_hexpand(w, TRUE);
+  return w;
+}
 static GtkWidget *make_strip(Ui *u, int i) {
-  GtkWidget *b = box(GTK_ORIENTATION_VERTICAL, 8);
+  GtkWidget *b = box(GTK_ORIENTATION_VERTICAL, 7);
   gtk_widget_add_css_class(b, "strip");
   if (i == 6)
     gtk_widget_add_css_class(b, "master");
-  gtk_widget_set_size_request(b, 128, -1);
-  gtk_widget_set_hexpand(b, TRUE);
+  gtk_widget_set_size_request(b, i == 6 ? 126 : 112, -1);
+  gtk_widget_set_hexpand(b, i != 6);
   u->strips[i] = b;
   add(b, label(strip_names[i], "strip-title"));
   if (i < 6) {
     u->names[i] = gtk_entry_new();
-    gtk_entry_set_placeholder_text(GTK_ENTRY(u->names[i]), "Имя канала");
-    gtk_widget_set_tooltip_text(u->names[i], "Имя канала · Enter для применения");
-    gtk_entry_set_max_length(GTK_ENTRY(u->names[i]), 256);
-    gtk_widget_set_size_request(u->names[i], -1, 34);
-    gtk_editable_set_width_chars(GTK_EDITABLE(u->names[i]), 8);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(u->names[i]), "Название");
+    gtk_widget_set_tooltip_text(u->names[i],
+                                "Имя канала · Enter для применения");
+    gtk_entry_set_max_length(GTK_ENTRY(u->names[i]), 128);
+    gtk_editable_set_width_chars(GTK_EDITABLE(u->names[i]), 6);
     tag(u->names[i], "source", i);
     g_signal_connect(u->names[i], "activate", G_CALLBACK(name_changed), u);
     add(b, u->names[i]);
   } else {
-    GtkWidget *alias = label("Стереомикс", "hint");
-    gtk_widget_set_size_request(alias, -1, 34);
-    add(b, alias);
+    GtkWidget *subtitle = label("После фейдера", "hint");
+    gtk_widget_set_size_request(subtitle, -1, 28);
+    add(b, subtitle);
   }
   GtkWidget *pans = box(GTK_ORIENTATION_VERTICAL, 2);
-  gtk_widget_set_size_request(pans, -1, 96);
+  gtk_widget_set_size_request(pans, -1, 54);
   add(b, pans);
   if (i < 6) {
     for (int ch = 0; ch < (i < 2 ? 1 : 2); ch++) {
-      add(pans, label(i < 2 ? "Панорама"
-                      : ch  ? "Правый канал"
-                            : "Левый канал",
-                      "hint"));
+      GtkWidget *row = box(GTK_ORIENTATION_HORIZONTAL, 4);
+      add(row, label(i < 2 ? "Pan" : ch ? "R" : "L", "hint"));
       u->pan[i][ch] =
           gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 1, .01);
       gtk_scale_set_draw_value(GTK_SCALE(u->pan[i][ch]), FALSE);
+      gtk_widget_set_hexpand(u->pan[i][ch], TRUE);
       tag(u->pan[i][ch], "source", i);
       tag(u->pan[i][ch], "pan", ch + 1);
-      char accessible[96];
-      snprintf(accessible, sizeof accessible, "%s · панорама %s", strip_names[i],
-               i < 2 ? "" : ch ? "правого канала" : "левого канала");
+      char accessible[128];
+      snprintf(accessible, sizeof accessible, "%s · панорама %s",
+               strip_names[i],
+               i < 2 ? ""
+               : ch  ? "правого канала"
+                     : "левого канала");
       gtk_accessible_update_property(GTK_ACCESSIBLE(u->pan[i][ch]),
-                                      GTK_ACCESSIBLE_PROPERTY_LABEL,
-                                      accessible, -1);
+                                     GTK_ACCESSIBLE_PROPERTY_LABEL, accessible,
+                                     -1);
       g_signal_connect(u->pan[i][ch], "value-changed", G_CALLBACK(gain_changed),
                        u);
-      add(pans, u->pan[i][ch]);
+      add_reset(u->pan[i][ch]);
+      add(row, u->pan[i][ch]);
+      add(pans, row);
     }
-  } else
-    add(pans, label("После общего\nфейдера", "hint"));
-  GtkWidget *faders = box(GTK_ORIENTATION_HORIZONTAL, 3);
+  } else {
+    add(pans, label("Стереомикс", "hint"));
+    add(pans, label("Dim: −20 dB", "hint"));
+  }
+  GtkWidget *faders = box(GTK_ORIENTATION_HORIZONTAL, 4);
+  gtk_widget_set_halign(faders, GTK_ALIGN_CENTER);
+  gtk_widget_set_vexpand(faders, TRUE);
   u->meters[i] = meter(u, i, FALSE);
   add(faders, u->meters[i]);
-  u->gain[i] = gtk_scale_new_with_range(GTK_ORIENTATION_VERTICAL, -60, 0, .5);
+  u->gain[i] = gtk_scale_new_with_range(GTK_ORIENTATION_VERTICAL, -60, 0, .1);
   gtk_range_set_inverted(GTK_RANGE(u->gain[i]), TRUE);
   gtk_scale_set_draw_value(GTK_SCALE(u->gain[i]), FALSE);
   gtk_widget_set_vexpand(u->gain[i], TRUE);
-  gtk_widget_set_size_request(u->gain[i], 30, 208);
+  gtk_widget_set_size_request(u->gain[i], 28, 180);
   tag(u->gain[i], "source", i);
-  char accessible[96];
+  char accessible[128];
   snprintf(accessible, sizeof accessible, "%s · уровень, dB", strip_names[i]);
   gtk_accessible_update_property(GTK_ACCESSIBLE(u->gain[i]),
-                                  GTK_ACCESSIBLE_PROPERTY_LABEL,
-                                  accessible, -1);
+                                 GTK_ACCESSIBLE_PROPERTY_LABEL, accessible, -1);
   g_signal_connect(u->gain[i], "value-changed", G_CALLBACK(gain_changed), u);
+  add_reset(u->gain[i]);
   add(faders, u->gain[i]);
   add(b, faders);
-  u->gain_text[i] = label("0.0 dB", "gain");
-  add(b, u->gain_text[i]);
+  GtkWidget *value = box(GTK_ORIENTATION_HORIZONTAL, 3);
+  gtk_widget_set_halign(value, GTK_ALIGN_CENTER);
+  u->gain_text[i] = gtk_entry_new();
+  gtk_widget_add_css_class(u->gain_text[i], "gain");
+  gtk_editable_set_width_chars(GTK_EDITABLE(u->gain_text[i]), 5);
+  gtk_editable_set_max_width_chars(GTK_EDITABLE(u->gain_text[i]), 6);
+  gtk_entry_set_alignment(GTK_ENTRY(u->gain_text[i]), .5);
+  gtk_entry_set_input_purpose(GTK_ENTRY(u->gain_text[i]),
+                              GTK_INPUT_PURPOSE_NUMBER);
+  gtk_accessible_update_property(GTK_ACCESSIBLE(u->gain_text[i]),
+                                 GTK_ACCESSIBLE_PROPERTY_LABEL, accessible, -1);
+  gtk_widget_set_tooltip_text(u->gain_text[i],
+                              "Точный уровень от −60 до 0 dB · Enter");
+  tag(u->gain_text[i], "source", i);
+  g_signal_connect(u->gain_text[i], "activate", G_CALLBACK(gain_entered), u);
+  add(value, u->gain_text[i]);
+  add(value, label("dB", "hint"));
+  add(b, value);
   u->peaks[i] = label("−∞ dBFS", "hint");
   add(b, u->peaks[i]);
+  GtkWidget *listen = box(GTK_ORIENTATION_HORIZONTAL, 4);
   if (i < 6) {
     u->mute[i] = gtk_toggle_button_new_with_label("Mute");
     gtk_widget_add_css_class(u->mute[i], "control");
     gtk_widget_add_css_class(u->mute[i], "mute");
+    gtk_widget_set_hexpand(u->mute[i], TRUE);
+    tag(u->mute[i], "source", i);
     snprintf(accessible, sizeof accessible, "%s · Mute", strip_names[i]);
     gtk_accessible_update_property(GTK_ACCESSIBLE(u->mute[i]),
-                                    GTK_ACCESSIBLE_PROPERTY_LABEL,
-                                    accessible, -1);
-    tag(u->mute[i], "source", i);
+                                   GTK_ACCESSIBLE_PROPERTY_LABEL, accessible,
+                                   -1);
     g_signal_connect(u->mute[i], "toggled", G_CALLBACK(mute_changed), u);
-    add(b, u->mute[i]);
+    add(listen, u->mute[i]);
+    u->solo[i] = listen_button(u, "Solo", i, "solo");
+    add(listen, u->solo[i]);
   } else {
-    GtkWidget *spacer = label("Выход микса", "hint");
-    gtk_widget_set_size_request(spacer, -1, 34);
-    add(b, spacer);
+    u->master_mute = listen_button(u, "Mute", 6, "master_mute");
+    u->dim = listen_button(u, "Dim", 6, "dim");
+    add(listen, u->master_mute);
+    add(listen, u->dim);
   }
+  add(b, listen);
+  GtkWidget *advanced;
+  add(b, popover_button("PeakRef", &advanced));
+  add(advanced, label("Отметка порога", "section"));
   const char *rs[] = {"0 dBFS",   "−6 dBFS",  "−12 dBFS", "−18 dBFS",
                       "−24 dBFS", "−30 dBFS", "−36 dBFS", "−42 dBFS",
                       "−60 dBFS", NULL};
-  GtkWidget *refrow = box(GTK_ORIENTATION_HORIZONTAL, 4);
   u->refs[i] = dropdown(rs);
   tag(u->refs[i], "source", i);
-  gtk_widget_set_tooltip_text(u->refs[i], "Порог PeakRef");
   snprintf(accessible, sizeof accessible, "%s · порог PeakRef", strip_names[i]);
   gtk_accessible_update_property(GTK_ACCESSIBLE(u->refs[i]),
-                                  GTK_ACCESSIBLE_PROPERTY_LABEL,
-                                  accessible, -1);
+                                 GTK_ACCESSIBLE_PROPERTY_LABEL, accessible, -1);
   g_signal_connect(u->refs[i], "notify::selected", G_CALLBACK(ref_changed), u);
-  add(refrow, u->refs[i]);
-  u->ref_reset[i] = gtk_button_new_from_icon_name("edit-clear-symbolic");
-  gtk_widget_add_css_class(u->ref_reset[i], "control");
+  add(advanced, u->refs[i]);
+  u->ref_reset[i] = button("Сбросить превышение", G_CALLBACK(reset_ref), u);
   tag(u->ref_reset[i], "source", i);
-  gtk_widget_set_tooltip_text(u->ref_reset[i], "Сбросить превышение PeakRef");
-  snprintf(accessible, sizeof accessible, "%s · сброс PeakRef", strip_names[i]);
-  gtk_accessible_update_property(GTK_ACCESSIBLE(u->ref_reset[i]),
-                                  GTK_ACCESSIBLE_PROPERTY_LABEL,
-                                  accessible, -1);
-  g_signal_connect(u->ref_reset[i], "clicked", G_CALLBACK(reset_ref), u);
-  add(refrow, u->ref_reset[i]);
-  add(b, refrow);
+  add(advanced, u->ref_reset[i]);
+  add(advanced,
+      label(i == 6 ? "Уровень после общего фейдера" : "Индикатор до фейдера",
+            "hint"));
   return b;
 }
 static gboolean close_window(GtkWindow *window, gpointer data) {
@@ -1255,6 +1412,32 @@ static gboolean close_window(GtkWindow *window, gpointer data) {
   u->window = NULL;
   return FALSE;
 }
+static gboolean shortcuts(GtkEventControllerKey *controller, guint keyval,
+                          guint keycode, GdkModifierType modifiers,
+                          gpointer data) {
+  (void)controller;
+  (void)keycode;
+  Ui *u = data;
+  if (!(modifiers & GDK_CONTROL_MASK) || !u->connected || u->replacing)
+    return FALSE;
+  guint key = gdk_keyval_to_lower(keyval);
+  GtkWidget *focus = gtk_window_get_focus(GTK_WINDOW(u->window));
+  if (key == GDK_KEY_z && !(focus && GTK_IS_EDITABLE(focus))) {
+    gboolean redo = modifiers & GDK_SHIFT_MASK;
+    if (yes(get(u->state, redo ? "can_redo" : "can_undo")))
+      command(u, redo ? "/api/redo" : "/api/undo", body());
+    return TRUE;
+  }
+  if (key == GDK_KEY_s) {
+    command(u, "/api/save", body());
+    return TRUE;
+  }
+  if (key == GDK_KEY_o) {
+    open_preset(NULL, u);
+    return TRUE;
+  }
+  return FALSE;
+}
 static void activate(GtkApplication *app, gpointer data) {
   Ui *u = data;
   if (u->window) {
@@ -1264,39 +1447,54 @@ static void activate(GtkApplication *app, gpointer data) {
   u->app = app;
   u->window = gtk_application_window_new(app);
   gtk_window_set_title(GTK_WINDOW(u->window), "MiniFuse 2 for Linux");
-  gtk_window_set_default_size(GTK_WINDOW(u->window), 1280, 820);
+  gtk_window_set_default_size(GTK_WINDOW(u->window), 1060, 700);
   gtk_window_set_icon_name(GTK_WINDOW(u->window),
                            "io.github.minifuze2.Control");
   g_signal_connect(u->window, "close-request", G_CALLBACK(close_window), u);
+  GtkEventController *keys = gtk_event_controller_key_new();
+  g_signal_connect(keys, "key-pressed", G_CALLBACK(shortcuts), u);
+  gtk_widget_add_controller(u->window, keys);
   u->css = gtk_css_provider_new();
   load_theme(u);
   apply_theme(u);
   gtk_style_context_add_provider_for_display(
       gtk_widget_get_display(u->window), GTK_STYLE_PROVIDER(u->css),
       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  GtkWidget *header = gtk_header_bar_new(),
-            *brand = box(GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *header = gtk_header_bar_new();
   gtk_header_bar_set_decoration_layout(GTK_HEADER_BAR(header),
-                                        ":minimize,maximize,close");
-  add(brand, label("MiniFuse 2", "brand"));
-  add(brand, label("Панель управления Linux", "subtitle"));
-  gtk_header_bar_pack_start(GTK_HEADER_BAR(header), brand);
+                                       ":minimize,maximize,close");
+  gtk_header_bar_pack_start(GTK_HEADER_BAR(header),
+                            label("MiniFuse 2", "brand"));
   u->status = label("Подключение…", "hint");
+  gtk_label_set_ellipsize(GTK_LABEL(u->status), PANGO_ELLIPSIZE_END);
+  gtk_label_set_max_width_chars(GTK_LABEL(u->status), 44);
   gtk_header_bar_set_title_widget(GTK_HEADER_BAR(header), u->status);
-  u->save = simple_button(u, "Сохранить", "/api/save");
-  gtk_widget_add_css_class(u->save, "suggested-action");
   gtk_header_bar_pack_end(GTK_HEADER_BAR(header),
                           button("Настройки", G_CALLBACK(settings), u));
+  u->save = simple_button(u, "Сохранить", "/api/save");
+  gtk_widget_set_tooltip_text(u->save, "Сохранить текущий микс · Ctrl+S");
   gtk_header_bar_pack_end(GTK_HEADER_BAR(header), u->save);
-  u->load = simple_button(u, "Загрузить", "/api/load");
-  gtk_header_bar_pack_end(GTK_HEADER_BAR(header), u->load);
+  GtkWidget *presets;
+  gtk_header_bar_pack_end(GTK_HEADER_BAR(header),
+                          popover_button("Пресеты", &presets));
+  add(presets, label("Миксы и настройки", "section"));
+  add(presets, button("Открыть пресет…", G_CALLBACK(open_preset), u));
+  GtkWidget *save_as = button("Сохранить как…", G_CALLBACK(export_preset), u);
+  g_object_set_data(G_OBJECT(save_as), "native", GINT_TO_POINTER(1));
+  add(presets, save_as);
+  u->load = simple_button(u, "Вернуть сохранённый микс", "/api/load");
+  add(presets, u->load);
+  add(presets, gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
+  u->export_button =
+      button("Экспорт Windows .mfp…", G_CALLBACK(export_preset), u);
+  add(presets, u->export_button);
+  add(presets, simple_button(u, "Заводской микс", "/api/factory"));
   gtk_window_set_titlebar(GTK_WINDOW(u->window), header);
   u->root = box(GTK_ORIENTATION_VERTICAL, 0);
   gtk_window_set_child(GTK_WINDOW(u->window), u->root);
-  GtkWidget *tabs = box(GTK_ORIENTATION_HORIZONTAL, 8);
-  gtk_widget_add_css_class(tabs, "tabs");
-  const char *names[] = {"Входы", "Monitor & Phones", "Loopback Mix 3/4",
-                         "Loopback Mix 5/6"};
+  GtkWidget *top = box(GTK_ORIENTATION_HORIZONTAL, 4);
+  gtk_widget_add_css_class(top, "tabs");
+  const char *names[] = {"Входы", "Мониторинг", "Микс 3/4", "Микс 5/6"};
   for (int i = 0; i < 4; i++) {
     u->tabs[i] = gtk_toggle_button_new_with_label(names[i]);
     gtk_widget_add_css_class(u->tabs[i], "control");
@@ -1305,96 +1503,64 @@ static void activate(GtkApplication *app, gpointer data) {
                                   GTK_TOGGLE_BUTTON(u->tabs[0]));
     tag(u->tabs[i], "page", i);
     g_signal_connect(u->tabs[i], "toggled", G_CALLBACK(tab_changed), u);
-    add(tabs, u->tabs[i]);
+    add(top, u->tabs[i]);
   }
-  add(u->root, tabs);
-  u->workspace = box(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_widget_set_vexpand(u->workspace, TRUE);
-  add(u->root, u->workspace);
-  GtkWidget *sidebar_scroll = gtk_scrolled_window_new(),
-            *sidebar = box(GTK_ORIENTATION_VERTICAL, 10);
-  gtk_widget_add_css_class(sidebar, "sidebar");
-  gtk_widget_set_size_request(sidebar_scroll, 232, -1);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sidebar_scroll),
-                                 GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(sidebar_scroll), sidebar);
-  add(u->workspace, sidebar_scroll);
-  add(sidebar, label("Аудиоинтерфейс", "section"));
-  u->device = dropdown(NULL);
-  add(sidebar, u->device);
-  u->route = button("Подключить к микшеру", G_CALLBACK(route_changed), u);
-  add(sidebar, u->route);
-  u->firmware = label("", "hint");
-  add(sidebar, u->firmware);
-  add(sidebar, gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
-  add(sidebar, label("Аналоговые входы", "section"));
-  GtkWidget *inst = box(GTK_ORIENTATION_HORIZONTAL, 8);
-  add(sidebar, inst);
-  const char *hardware_labels[] = {
-      "INST 1",   "INST 2",     "Direct Mono",      "+48V",
-      "Loopback", "На USB 1/2", "На Monitor/Phones"};
-  GtkWidget *routes = box(GTK_ORIENTATION_VERTICAL, 6);
-  for (int i = 0; i < 7; i++) {
-    u->hardware[i] = gtk_toggle_button_new_with_label(hardware_labels[i]);
-    gtk_widget_add_css_class(u->hardware[i], "control");
-    tag(u->hardware[i], "switch", i);
-    g_signal_connect(u->hardware[i], "toggled", G_CALLBACK(hardware_changed),
-                     u);
-    add(i < 2 ? inst : i < 4 ? sidebar : routes, u->hardware[i]);
-  }
-  gtk_widget_add_css_class(u->hardware[3], "destructive-action");
-  GtkWidget *expander = gtk_expander_new("Аппаратный loopback");
-  gtk_expander_set_child(GTK_EXPANDER(expander), routes);
-  add(sidebar, expander);
-  add(sidebar, gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
-  add(sidebar, label("Пресеты", "section"));
-  add(sidebar, button("Открыть .mfp…", G_CALLBACK(open_preset), u));
-  u->export_button = button("Экспорт .mfp…", G_CALLBACK(export_preset), u);
-  add(sidebar, u->export_button);
-  add(sidebar, simple_button(u, "Заводской микс", "/api/factory"));
-  add(sidebar, simple_button(u, "Сбросить пики", "/api/reset-meters"));
-  GtkWidget *right = box(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_widget_add_css_class(right, "mixer-workspace");
-  gtk_widget_set_hexpand(right, TRUE);
-  add(u->workspace, right);
-  GtkWidget *mixbar = box(GTK_ORIENTATION_VERTICAL, 8),
-            *context = box(GTK_ORIENTATION_HORIZONTAL, 12),
-            *visibility = box(GTK_ORIENTATION_HORIZONTAL, 12);
+  GtkWidget *spacer = box(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_widget_set_hexpand(spacer, TRUE);
+  add(top, spacer);
+  u->undo = simple_button(u, "Отменить", "/api/undo");
+  u->redo = simple_button(u, "Повторить", "/api/redo");
+  gtk_widget_set_tooltip_text(u->undo, "Отменить изменение микса · Ctrl+Z");
+  gtk_widget_set_tooltip_text(u->redo,
+                              "Повторить изменение микса · Ctrl+Shift+Z");
+  add(top, u->undo);
+  add(top, u->redo);
+  add(u->root, top);
+  GtkWidget *mixbar = box(GTK_ORIENTATION_HORIZONTAL, 12);
   gtk_widget_add_css_class(mixbar, "mixbar");
-  u->link = gtk_check_button_new_with_label("Связать Input 1/2");
-  g_signal_connect(u->link, "toggled", G_CALLBACK(link_changed), u);
-  add(context, u->link);
   u->mix_name = gtk_entry_new();
-  gtk_entry_set_placeholder_text(GTK_ENTRY(u->mix_name), "Имя микса");
-  gtk_widget_set_tooltip_text(u->mix_name, "Имя микса · Enter для применения");
+  gtk_entry_set_placeholder_text(GTK_ENTRY(u->mix_name), "Название микса");
+  gtk_entry_set_max_length(GTK_ENTRY(u->mix_name), 128);
+  gtk_widget_set_tooltip_text(u->mix_name,
+                              "Название микса · Enter для применения");
   gtk_widget_set_hexpand(u->mix_name, TRUE);
   gtk_editable_set_width_chars(GTK_EDITABLE(u->mix_name), 12);
   tag(u->mix_name, "source", 6);
   g_signal_connect(u->mix_name, "activate", G_CALLBACK(name_changed), u);
-  add(context, u->mix_name);
-  add(mixbar, context);
-  add(visibility, label("Показывать", "hint"));
+  add(mixbar, u->mix_name);
+  u->link = gtk_check_button_new_with_label("Связать входы 1/2");
+  g_signal_connect(u->link, "toggled", G_CALLBACK(link_changed), u);
+  add(mixbar, u->link);
+  GtkWidget *visibility;
+  add(mixbar, popover_button("Каналы", &visibility));
+  add(visibility, label("Виртуальные источники", "section"));
   for (int i = 0; i < 3; i++) {
-    char s[64];
-    snprintf(s, sizeof s, "Virtual %d/%d", 3 + i * 2, 4 + i * 2);
-    u->visible[i] = gtk_check_button_new_with_label(s);
+    char title[40];
+    snprintf(title, sizeof title, "Virtual %d/%d", 3 + i * 2, 4 + i * 2);
+    u->visible[i] = gtk_check_button_new_with_label(title);
     tag(u->visible[i], "index", i);
     g_signal_connect(u->visible[i], "toggled", G_CALLBACK(visible_changed), u);
     add(visibility, u->visible[i]);
   }
-  add(mixbar, visibility);
-  add(right, mixbar);
+  add(u->root, mixbar);
+  u->workspace = box(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_widget_set_vexpand(u->workspace, TRUE);
+  add(u->root, u->workspace);
   u->pages = gtk_stack_new();
   gtk_widget_set_vexpand(u->pages, TRUE);
-  add(right, u->pages);
-  GtkWidget *scroller = gtk_scrolled_window_new(),
+  add(u->workspace, u->pages);
+  GtkWidget *mixer = box(GTK_ORIENTATION_HORIZONTAL, 0),
+            *scroller = gtk_scrolled_window_new(),
             *strips = box(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_widget_set_hexpand(scroller, TRUE);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroller),
                                  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), strips);
-  for (int i = 0; i < 7; i++)
+  for (int i = 0; i < 6; i++)
     add(strips, make_strip(u, i));
-  gtk_stack_add_named(GTK_STACK(u->pages), scroller, "mixer");
+  add(mixer, scroller);
+  add(mixer, make_strip(u, 6));
+  gtk_stack_add_named(GTK_STACK(u->pages), mixer, "mixer");
   GtkWidget *inputs = box(GTK_ORIENTATION_HORIZONTAL, 0),
             *input_scroll = gtk_scrolled_window_new();
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(input_scroll), inputs);
@@ -1409,10 +1575,39 @@ static void activate(GtkApplication *app, gpointer data) {
     add(card, label(i < 2 ? "Аппаратный VU" : "Звук приложения", "hint"));
     u->input_meters[i] = meter(u, i, TRUE);
     add(card, u->input_meters[i]);
-    u->input_levels[i] = label("−∞ dBFS", "gain");
+    u->input_levels[i] = label("−∞ dBFS", "gain-label");
     add(card, u->input_levels[i]);
     add(inputs, card);
   }
+  GtkWidget *hardware = box(GTK_ORIENTATION_HORIZONTAL, 8), *device_settings;
+  gtk_widget_add_css_class(hardware, "hardware-bar");
+  add(hardware, popover_button("Устройство", &device_settings));
+  add(device_settings, label("Аудиоинтерфейс", "section"));
+  u->device = dropdown(NULL);
+  add(device_settings, u->device);
+  u->route = button("Подключить к микшеру", G_CALLBACK(route_changed), u);
+  add(device_settings, u->route);
+  u->firmware = label("", "hint");
+  add(device_settings, u->firmware);
+  add(device_settings, gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
+  add(device_settings, label("Аппаратный loopback", "section"));
+  const char *hardware_labels[] = {"INST 1",   "INST 2",   "Direct Mono",
+                                   "+48V",     "Loopback", "В USB 1/2",
+                                   "В монитор"};
+  for (int i = 0; i < 7; i++) {
+    u->hardware[i] = gtk_toggle_button_new_with_label(hardware_labels[i]);
+    gtk_widget_add_css_class(u->hardware[i], "control");
+    tag(u->hardware[i], "switch", i);
+    g_signal_connect(u->hardware[i], "toggled", G_CALLBACK(hardware_changed),
+                     u);
+    add(i < 4 ? hardware : device_settings, u->hardware[i]);
+  }
+  gtk_widget_add_css_class(u->hardware[3], "destructive-action");
+  GtkWidget *gap = box(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_widget_set_hexpand(gap, TRUE);
+  add(hardware, gap);
+  add(hardware, simple_button(u, "Сбросить пики", "/api/reset-meters"));
+  add(u->root, hardware);
   GtkWidget *footer = box(GTK_ORIENTATION_HORIZONTAL, 14);
   gtk_widget_add_css_class(footer, "footer");
   u->message = label("Подключение к аудиослужбе…", "hint");
@@ -1438,6 +1633,7 @@ static void activate(GtkApplication *app, gpointer data) {
   gtk_window_present(GTK_WINDOW(u->window));
   dispatch(u);
 }
+
 int main(int argc, char **argv) {
   Ui u = {0};
   u.url = g_strdup("http://127.0.0.1:39713");
@@ -1450,7 +1646,7 @@ int main(int argc, char **argv) {
       return 0;
     }
     if (!strcmp(argv[i], "--version")) {
-      puts("0.1.0-preview");
+      puts(MF_VERSION);
       g_free(u.url);
       return 0;
     }

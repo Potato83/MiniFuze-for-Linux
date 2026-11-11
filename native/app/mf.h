@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 #ifndef MF_APP_H
 #define MF_APP_H
+#include "version.h"
 #include <json-c/json.h>
 #include <limits.h>
 #include <pthread.h>
@@ -42,6 +43,9 @@ char *preset_text(J *preset);
 J *import_mixer(J *preset);
 J *export_mixer(J *state, J *preset);
 J *preset_controls(J *preset);
+bool preset_is_native(J *preset);
+J *preset_presentation(J *preset);
+J *native_preset(J *state, J *refs, J *presentation);
 J *preset_refs(J *preset);
 int linked_valid(J *state, J *preset);
 J *linked_edit(J *state, J *previous, J *preset);
@@ -116,6 +120,7 @@ typedef struct {
   char route_uid[513], route_port[128], csrf[65], web_dir[PATH_MAX];
   int http_port;
   J *saved, *preset, *saved_preset, *refs, *saved_refs, *devices, *device;
+  J *undo, *redo;
   J *route_error, *session_error, *hardware_levels;
   Ballistics meters, hardware_meters;
   float levels[16];

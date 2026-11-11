@@ -31,7 +31,7 @@ int main_cli(int argc, char **argv) {
     return usage();
   const char *command = argv[1];
   if (!strcmp(command, "--version")) {
-    puts("0.1.0-preview");
+    puts(MF_VERSION);
     return 0;
   }
   if (!strcmp(command, "factory"))

@@ -353,7 +353,12 @@ int app_init(App *a, const char *state_path, const char *session_path,
   } else {
     state = factory_state();
     refs = default_refs();
+    preset = native_preset(state, refs, NULL);
+    if (!preset)
+      goto bad;
   }
+  a->undo = json_object_new_array();
+  a->redo = json_object_new_array();
   a->saved = copy(state);
   a->saved_preset = copy(preset);
   a->saved_refs = copy(refs);
@@ -439,39 +444,38 @@ static J *bool_rows(bool values[3][7]) {
   }
   return a;
 }
+static bool same_preset(J *a, J *b) {
+  if (!preset_is_native(a) || !preset_is_native(b))
+    return json_object_equal(a, b);
+  J *pa = preset_presentation(a), *pb = preset_presentation(b);
+  bool same = pa && pb && json_object_equal(pa, pb);
+  if (pa)
+    json_object_put(pa);
+  if (pb)
+    json_object_put(pb);
+  return same;
+}
 J *app_view(App *a) {
   double now = monotonic();
   J *o = json_object_new_object();
   put(o, "mixer", copy(a->graph.state));
   put(o, "dirty",
       json_object_new_boolean(!json_object_equal(a->graph.state, a->saved) ||
-                              !json_object_equal(a->preset, a->saved_preset) ||
+                              !same_preset(a->preset, a->saved_preset) ||
                               !json_object_equal(a->refs, a->saved_refs)));
   put(o, "has_saved", json_object_new_boolean(!access(a->state_path, F_OK)));
-  J *pc = preset_controls(a->preset);
+  put(o, "can_undo",
+      json_object_new_boolean(a->undo && json_object_array_length(a->undo)));
+  put(o, "can_redo",
+      json_object_new_boolean(a->redo && json_object_array_length(a->redo)));
+  J *pc = preset_presentation(a->preset);
   if (!pc) {
     json_object_put(o);
     return NULL;
   }
-  put(pc, "has_template", json_object_new_boolean(a->preset != NULL));
-  J *input_names = json_object_new_array(),
-    *mix_names = json_object_new_array();
-  static const char *names[] = {
-      "SLS_Input_Name_0",        "SLS_Input_Name_1",
-      "SLS_USBInput_Name_0",     "SLS_VirtualInput_Name_0",
-      "SLS_VirtualInput_Name_1", "SLS_VirtualInput_Name_2"};
-  J *params = get(a->preset, "parameters");
-  for (int i = 0; i < 6; i++)
-    json_object_array_add(input_names,
-                          json_object_new_string(str(get(params, names[i]))));
-  for (int i = 0; i < 3; i++) {
-    char k[64];
-    snprintf(k, sizeof k, "SLS_Mix_Name_%d", i);
-    json_object_array_add(mix_names,
-                          json_object_new_string(str(get(params, k))));
-  }
-  put(pc, "input_names", input_names);
-  put(pc, "mix_names", mix_names);
+  put(pc, "has_template",
+      json_object_new_boolean(a->preset && !preset_is_native(a->preset)));
+  put(pc, "editable", json_object_new_boolean(true));
   put(o, "preset", pc);
   bool active = a->updated > 0 && now - a->updated < .75;
   float zero[16] = {0};
@@ -584,7 +588,7 @@ static int replace_mix(App *a, J *state, J *preset, J *refs) {
   refs_install(a, refs);
   return 0;
 }
-J *app_change(App *a, const char *path, J *body) {
+static J *app_change_impl(App *a, const char *path, J *body) {
   if (a->stopping) {
     fail("Panel is stopping");
     return NULL;
@@ -669,8 +673,48 @@ J *app_change(App *a, const char *path, J *body) {
     if (r)
       json_object_put(r);
     json_object_put(p);
+  } else if (!strcmp(path, "/api/import-native")) {
+    if (!fields(body, "text") ||
+        !json_object_is_type(get(body, "text"), json_type_string) ||
+        strlen(str(get(body, "text"))) !=
+            (size_t)json_object_get_string_len(get(body, "text"))) {
+      fail("Expected Linux preset text");
+      return NULL;
+    }
+    const char *text = str(get(body, "text"));
+    if (strlen(text) > 65536) {
+      fail("Linux preset exceeds 64 KiB");
+      return NULL;
+    }
+    J *d = parse_json(text, strlen(text)), *s = NULL, *p = NULL, *r = NULL;
+    if (!d)
+      return NULL;
+    rc = unpack_document(d, &s, &p, &r);
+    json_object_put(d);
+    if (!rc)
+      rc = replace_mix(a, s, p, r);
+    if (s)
+      json_object_put(s);
+    if (p)
+      json_object_put(p);
+    if (r)
+      json_object_put(r);
+  } else if (!strcmp(path, "/api/export-native")) {
+    if (!fields(body, "")) {
+      fail("Expected empty export request");
+      return NULL;
+    }
+    J *d = document(a->graph.state, a->preset, a->refs);
+    if (!d)
+      return NULL;
+    J *o = json_object_new_object();
+    put(o, "text",
+        json_object_new_string(
+            json_object_to_json_string_ext(d, JSON_C_TO_STRING_PRETTY)));
+    json_object_put(d);
+    return o;
   } else if (!strcmp(path, "/api/export-mfp")) {
-    if (!fields(body, "") || !a->preset) {
+    if (!fields(body, "") || !a->preset || preset_is_native(a->preset)) {
       fail("Import a .mfp template before export");
       return NULL;
     }
@@ -703,7 +747,10 @@ J *app_change(App *a, const char *path, J *body) {
       json_object_put(p);
   } else if (!strcmp(path, "/api/factory")) {
     J *s = factory_state(), *r = default_refs();
-    rc = replace_mix(a, s, NULL, r);
+    J *p = native_preset(s, r, NULL);
+    rc = p ? replace_mix(a, s, p, r) : -1;
+    if (p)
+      json_object_put(p);
     json_object_put(s);
     json_object_put(r);
   } else if (!strcmp(path, "/api/peakref") ||
@@ -868,6 +915,72 @@ J *app_change(App *a, const char *path, J *body) {
     return NULL;
   return app_view(a);
 }
+static void history_push(J *history, J *doc) {
+  if (json_object_array_length(history) >= 32)
+    json_object_array_del_idx(history, 0, 1);
+  json_object_array_add(history, doc);
+}
+J *app_change(App *a, const char *path, J *body) {
+  bool undo = !strcmp(path, "/api/undo"), redo = !strcmp(path, "/api/redo");
+  if (undo || redo) {
+    J *from = undo ? a->undo : a->redo, *to = undo ? a->redo : a->undo;
+    size_t n = json_object_array_length(from);
+    if (!fields(body, "") || !n || a->stopping) {
+      fail("No mixer change to undo or redo");
+      return NULL;
+    }
+    J *s = NULL, *p = NULL, *r = NULL;
+    J *current = document(a->graph.state, a->preset, a->refs);
+    if (!current)
+      return NULL;
+    int rc =
+        unpack_document(json_object_array_get_idx(from, n - 1), &s, &p, &r);
+    if (!rc)
+      rc = replace_mix(a, s, p, r);
+    if (!rc) {
+      history_push(to, current);
+      current = NULL;
+      json_object_array_del_idx(from, n - 1, 1);
+      rc = app_persist(a);
+    }
+    if (current)
+      json_object_put(current);
+    if (s)
+      json_object_put(s);
+    if (p)
+      json_object_put(p);
+    if (r)
+      json_object_put(r);
+    return rc ? NULL : app_view(a);
+  }
+  bool record = !strcmp(path, "/api/mixer") || !strcmp(path, "/api/link") ||
+                !strcmp(path, "/api/virtual") || !strcmp(path, "/api/rename") ||
+                !strcmp(path, "/api/peakref") || !strcmp(path, "/api/load") ||
+                !strcmp(path, "/api/factory") ||
+                !strcmp(path, "/api/import-mfp") ||
+                !strcmp(path, "/api/import-native");
+  J *before = record ? document(a->graph.state, a->preset, a->refs) : NULL;
+  if (record && !before)
+    return NULL;
+  J *result = app_change_impl(a, path, body);
+  if (before && result) {
+    J *after = document(a->graph.state, a->preset, a->refs);
+    if (after && !json_object_equal(before, after)) {
+      history_push(a->undo, before);
+      before = NULL;
+      json_object_array_del_idx(a->redo, 0, json_object_array_length(a->redo));
+    }
+    if (after)
+      json_object_put(after);
+    put(result, "can_undo",
+        json_object_new_boolean(json_object_array_length(a->undo) > 0));
+    put(result, "can_redo",
+        json_object_new_boolean(json_object_array_length(a->redo) > 0));
+  }
+  if (before)
+    json_object_put(before);
+  return result;
+}
 void app_close(App *a) {
   pthread_mutex_lock(&a->lock);
   a->stopping = true;
@@ -888,6 +1001,8 @@ void app_close(App *a) {
                  &a->saved_preset,
                  &a->refs,
                  &a->saved_refs,
+                 &a->undo,
+                 &a->redo,
                  &a->devices,
                  &a->device,
                  &a->route_error,

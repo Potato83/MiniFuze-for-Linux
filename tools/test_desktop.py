@@ -28,6 +28,7 @@ def main():
     config = folder/'config'
     config.mkdir(mode=0o700)
     env['XDG_CONFIG_HOME'] = str(config)
+    env['XDG_STATE_HOME'] = str(folder/'state')
     report = {'ok': False, 'folder': str(folder)}
 
     def start(argv, name):
@@ -39,8 +40,10 @@ def main():
 
     try:
         if args.start_pipewire:
-            if list(Path('/dev/snd').glob('controlC*')):
-                raise RuntimeError('CI server startup requires a host without ALSA hardware')
+            wp_help = subprocess.check_output(['wireplumber', '--help'], text=True)
+            policy = '--profile' in wp_help
+            if not policy and list(Path('/dev/snd').glob('controlC*')):
+                raise RuntimeError('Private tests with hardware present require WirePlumber 0.5 policy profile')
             runtime = folder/'runtime'
             runtime.mkdir(mode=0o700)
             env['XDG_RUNTIME_DIR'] = str(runtime)
@@ -51,14 +54,14 @@ def main():
                 if time.monotonic()>deadline:
                     raise RuntimeError('Private PipeWire did not start')
                 time.sleep(.1)
-            start(['wireplumber'], 'wireplumber.log')
+            start(['wireplumber', '--profile=policy'] if policy else ['wireplumber'], 'wireplumber.log')
             time.sleep(1)
         ready = folder/'ready.json'
         engine = start([str(ROOT/'build/minifuze2-engine'), 'panel',
                         '--prefix', 'mf_desktop_test_'+str(os.getpid()),
                         '--state', str(folder/'state.json'),
                         '--session-state', str(folder/'working.json'),
-                        '--ready-file', str(ready)], 'engine.log')
+                        '--ready-file', str(ready), '--ctl', str(folder/'no-hardware-control')], 'engine.log')
         deadline = time.monotonic()+25
         while not ready.exists():
             if engine.poll() is not None:

@@ -1,0 +1,59 @@
+{
+  "version": "0.1.0-rc.1",
+  "kernel": "7.3.1-1-cachyos",
+  "rate": 48000,
+  "probe_amplitude_dbfs": -46.020599913279625,
+  "analog_return": true,
+  "phantom_power_changed": false,
+  "stages": [
+    {
+      "name": "Signal before USB unplug",
+      "max_software_amplitude_error": 1.9797277839882594e-09,
+      "ok": true,
+      "analog_return_rms": 0.001323157224260903,
+      "software_left_rms": 0.002502966253068921,
+      "analog_ok": true
+    },
+    {
+      "name": "USB removal observed; route selection retained",
+      "ok": true
+    },
+    {
+      "name": "Same USB identity returned with a new PipeWire object",
+      "ok": true
+    },
+    {
+      "name": "USB recovery preserves unsaved mix and names",
+      "ok": true
+    },
+    {
+      "name": "Analog signal after physical USB reconnect",
+      "max_software_amplitude_error": 1.9797277871464643e-09,
+      "ok": true,
+      "analog_return_rms": 0.0013279086673302109,
+      "software_left_rms": 0.002502966253068921,
+      "expected_analog_rms": 0.001323157224260903,
+      "analog_tolerance_rms": 6.615786121304516e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "Default devices unchanged",
+      "ok": true
+    },
+    {
+      "name": "Forced clock settings unchanged",
+      "ok": true
+    },
+    {
+      "name": "Owned graph removed",
+      "ok": true
+    }
+  ],
+  "hardware_audio_connected": true,
+  "hardware_control_available": true,
+  "actual_rate": 48000,
+  "firmware": "1.5.0",
+  "analog_noise_rms": 2.9799833978636445e-05,
+  "engine_sha256": "ef1aa355a8f0b4c3b5cf6bd2e122d33dd9fe94dfcbe19dc769d113aece8643f2",
+  "ok": true
+}

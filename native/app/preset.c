@@ -7,13 +7,20 @@
 #include <string.h>
 
 static J *parameters(J *p) {
-  if (!fields(p, "version,parameters") || !integer(get(p, "version")) ||
+  if ((!fields(p, "version,parameters") &&
+       !(fields(p, "version,parameters,native") && preset_is_native(p))) ||
+      !integer(get(p, "version")) ||
       json_object_get_int(get(p, "version")) != 1 ||
       !json_object_is_type(get(p, "parameters"), json_type_object)) {
     fail("Invalid preset document");
     return NULL;
   }
   return get(p, "parameters");
+}
+bool preset_is_native(J *p) {
+  J *v = get(p, "native");
+  return json_object_is_type(v, json_type_boolean) &&
+         json_object_get_boolean(v);
 }
 J *parse_preset(const char *text) {
   if (strlen(text) > 32768) {
@@ -61,6 +68,10 @@ done:
   return p;
 }
 char *preset_text(J *p) {
+  if (preset_is_native(p)) {
+    fail("Import a Windows .mfp template before exporting .mfp");
+    return NULL;
+  }
   J *params = parameters(p);
   if (!params)
     return NULL;
@@ -200,7 +211,9 @@ int linked_valid(J *state, J *preset) {
       if (json_object_get_double(get(a, "level_db")) !=
               json_object_get_double(get(b, "level_db")) ||
           json_object_get_boolean(get(a, "mute")) !=
-              json_object_get_boolean(get(b, "mute"))) {
+              json_object_get_boolean(get(b, "mute")) ||
+          json_object_get_boolean(get(a, "solo")) !=
+              json_object_get_boolean(get(b, "solo"))) {
         json_object_put(c);
         return fail("Linked inputs must have the same level and mute");
       }
@@ -282,6 +295,18 @@ bad:
 J *export_mixer(J *state, J *preset) {
   if (linked_valid(state, preset))
     return NULL;
+  for (int m = 0; m < 3; m++) {
+    J *mix = json_object_array_get_idx(get(state, "mixes"), m);
+    bool temporary = json_object_get_boolean(get(mix, "master_mute")) ||
+                     json_object_get_boolean(get(mix, "dim"));
+    for (int i = 0; i < 6; i++)
+      temporary |= json_object_get_boolean(
+          get(json_object_array_get_idx(get(mix, "strips"), i), "solo"));
+    if (temporary) {
+      fail("Turn off Solo, Dim and master Mute before exporting .mfp");
+      return NULL;
+    }
+  }
   J *check = import_mixer(preset);
   if (!check)
     return NULL;
@@ -356,8 +381,8 @@ J *linked_edit(J *state, J *previous, J *preset) {
       J *pair = get(json_object_array_get_idx(get(s, "mixes"), m), "strips"),
         *old =
             get(json_object_array_get_idx(get(previous, "mixes"), m), "strips");
-      const char *keys[] = {"level_db", "mute"};
-      for (int k = 0; k < 2; k++) {
+      const char *keys[] = {"level_db", "mute", "solo"};
+      for (int k = 0; k < 3; k++) {
         bool changed[2];
         for (int i = 0; i < 2; i++)
           changed[i] = !json_object_equal(
@@ -379,7 +404,7 @@ J *linked_edit(J *state, J *previous, J *preset) {
 }
 int change_link(J **state, J **preset, int m, bool enabled) {
   if (m < 0 || m >= 3 || !*preset)
-    return fail("Import .mfp before changing Link");
+    return fail("Invalid link request");
   if (linked_valid(*state, *preset))
     return -1;
   J *s = copy(*state), *p = copy(*preset), *params = parameters(p),
@@ -395,6 +420,10 @@ int change_link(J **state, J **preset, int m, bool enabled) {
                     get(json_object_array_get_idx(pair, 0), "mute")) &&
                 json_object_get_boolean(
                     get(json_object_array_get_idx(pair, 1), "mute"));
+    bool solo = json_object_get_boolean(
+                    get(json_object_array_get_idx(pair, 0), "solo")) ||
+                json_object_get_boolean(
+                    get(json_object_array_get_idx(pair, 1), "solo"));
     float a, b;
     key(k, sizeof k, "PeakRef", m, 0, -1);
     if (norm(params, k, &a))
@@ -406,6 +435,8 @@ int change_link(J **state, J **preset, int m, bool enabled) {
       J *v = json_object_array_get_idx(pair, i);
       put(v, "level_db", json_object_new_double(level));
       put(v, "mute", json_object_new_boolean(mute));
+      if (get(v, "solo"))
+        put(v, "solo", json_object_new_boolean(solo));
       key(k, sizeof k, "Level", m, i, -1);
       number_string(params, k, db_normalized(level));
       key(k, sizeof k, "Mute", m, i, -1);
@@ -442,6 +473,8 @@ int change_virtual(J **state, J **preset, int m, int i, bool visible) {
         get(json_object_array_get_idx(get(s, "mixes"), m), "strips"), i + 3);
     put(v, "level_db", json_object_new_double(0));
     put(v, "mute", json_object_new_boolean(true));
+    if (get(v, "solo"))
+      put(v, "solo", json_object_new_boolean(false));
     J *pans = json_object_new_array();
     json_object_array_add(pans, json_object_new_double(0));
     json_object_array_add(pans, json_object_new_double(1));
@@ -529,4 +562,129 @@ int rename_field(J *preset, const char *kind, int i, const char *name) {
   snprintf(k, sizeof k, "SLS_Mix_Name_%d", i);
   put(params, input ? inputs[i] : k, json_object_new_string(name));
   return 0;
+}
+
+/* Linux presentation belongs to our document, independently of an optional
+ * Windows template. The parameter adapter keeps the proven Link/PeakRef rules
+ * shared between the two formats; native adapters are never exported as .mfp.
+ */
+J *preset_presentation(J *preset) {
+  J *o = preset_controls(preset), *p = preset ? parameters(preset) : NULL;
+  if (!o)
+    return NULL;
+  J *inputs = json_object_new_array(), *mixes = json_object_new_array();
+  static const char *names[] = {
+      "SLS_Input_Name_0",        "SLS_Input_Name_1",
+      "SLS_USBInput_Name_0",     "SLS_VirtualInput_Name_0",
+      "SLS_VirtualInput_Name_1", "SLS_VirtualInput_Name_2"};
+  for (int i = 0; i < 6; i++)
+    json_object_array_add(inputs,
+                          json_object_new_string(str(get(p, names[i]))));
+  for (int m = 0; m < 3; m++) {
+    char k[64];
+    snprintf(k, sizeof k, "SLS_Mix_Name_%d", m);
+    json_object_array_add(mixes, json_object_new_string(str(get(p, k))));
+  }
+  put(o, "input_names", inputs);
+  put(o, "mix_names", mixes);
+  return o;
+}
+static bool array_size(J *v, size_t n) {
+  return json_object_is_type(v, json_type_array) &&
+         json_object_array_length(v) == n;
+}
+J *native_preset(J *state, J *refs, J *presentation) {
+  float w[6][10];
+  if (matrix(state, w) || validate_refs(refs))
+    return NULL;
+  if (presentation &&
+      (!fields(presentation, "links,virtual_visible,input_names,mix_names") ||
+       !array_size(get(presentation, "links"), 3) ||
+       !array_size(get(presentation, "virtual_visible"), 3) ||
+       !array_size(get(presentation, "input_names"), 6) ||
+       !array_size(get(presentation, "mix_names"), 3))) {
+    fail("Invalid Linux presentation");
+    return NULL;
+  }
+  J *o = json_object_new_object(), *p = json_object_new_object();
+  put(o, "version", json_object_new_int(1));
+  put(o, "parameters", p);
+  put(o, "native", json_object_new_boolean(true));
+  for (int i = 0; i < 6; i++) {
+    J *name =
+        presentation
+            ? json_object_array_get_idx(get(presentation, "input_names"), i)
+            : NULL;
+    if ((presentation && !json_object_is_type(name, json_type_string)) ||
+        rename_field(o, "input", i, str(name)))
+      goto bad;
+  }
+  for (int m = 0; m < 3; m++) {
+    char k[96];
+    J *mix = json_object_array_get_idx(get(state, "mixes"), m),
+      *name = presentation
+                  ? json_object_array_get_idx(get(presentation, "mix_names"), m)
+                  : NULL,
+      *linked = presentation
+                    ? json_object_array_get_idx(get(presentation, "links"), m)
+                    : NULL,
+      *visible = presentation ? json_object_array_get_idx(
+                                    get(presentation, "virtual_visible"), m)
+                              : NULL;
+    if (presentation && (!json_object_is_type(name, json_type_string) ||
+                         !json_object_is_type(linked, json_type_boolean) ||
+                         !array_size(visible, 3)))
+      goto bad;
+    if (rename_field(o, "mix", m, str(name)))
+      goto bad;
+    snprintf(k, sizeof k, "SLS_Input_Link_%d_0", m);
+    put(p, k,
+        json_object_new_string(json_object_get_boolean(linked) ? "1" : "0"));
+    snprintf(k, sizeof k, "SLS_Output_Level_%d", m);
+    number_string(
+        p, k,
+        db_normalized((float)json_object_get_double(get(mix, "master_db"))));
+    for (int i = 0; i < 3; i++) {
+      J *v = visible ? json_object_array_get_idx(visible, i) : NULL;
+      if (visible && !json_object_is_type(v, json_type_boolean))
+        goto bad;
+      snprintf(k, sizeof k, "SLS_VirtualInput_Show_%d_%d", m, i);
+      put(p, k,
+          json_object_new_string(!visible || json_object_get_boolean(v) ? "1"
+                                                                        : "0"));
+    }
+    for (int i = 0; i < 7; i++) {
+      J *ref = json_object_array_get_idx(json_object_array_get_idx(refs, m), i);
+      if (ref) {
+        ref_key(k, sizeof k, m, i);
+        number_string(p, k, (float)json_object_get_double(ref));
+      } else if (i < 2)
+        goto bad;
+      if (i == 6)
+        continue;
+      J *strip = json_object_array_get_idx(get(mix, "strips"), i);
+      key(k, sizeof k, "Level", m, i, -1);
+      number_string(
+          p, k,
+          db_normalized((float)json_object_get_double(get(strip, "level_db"))));
+      key(k, sizeof k, "Mute", m, i, -1);
+      put(p, k,
+          json_object_new_string(
+              json_object_get_boolean(get(strip, "mute")) ? "1" : "0"));
+      for (int ch = 0; ch < (i < 2 ? 1 : 2); ch++) {
+        key(k, sizeof k, "Pan", m, i, i < 2 ? -1 : ch);
+        number_string(p, k,
+                      (float)json_object_get_double(
+                          json_object_array_get_idx(get(strip, "pans"), ch)));
+      }
+    }
+  }
+  if (linked_valid(state, o))
+    goto bad;
+  return o;
+bad:
+  if (!*mf_error)
+    fail("Invalid Linux presentation");
+  json_object_put(o);
+  return NULL;
 }

@@ -1,5 +1,28 @@
 # Release checklist and deferred work
 
+## 0.1.0-rc.1 release acceptance
+
+- [x] Compact dark studio UI with a light alternative.
+- [x] Solo, master Mute/Dim, numeric gain, Undo/Redo and Linux preset files.
+- [x] Names, Link and visibility without importing a Windows template.
+- [x] Local DSP, update/rollback, private service recovery and GTK checks.
+- [x] Versioned source/binary archives and draft release workflow.
+- [ ] Confirm GitHub Actions on Ubuntu 24.04, including kernel compilation.
+- [x] Measure the current C candidate through OUTPUT L → INPUT 2 at 48 kHz.
+- [x] Exercise software controls/presets and hardware switch readback on MiniFuse 2.
+- [x] Confirm same-port USB unplug/replug, owned-link repair and engine restart.
+- [x] Verify a fresh installation and active user-service update on CachyOS.
+- [ ] Listen through monitors/headphones and exercise ordinary DAW playback/recording.
+- [ ] Confirm port changes, suspend/resume and full host PipeWire restart on hardware.
+- [ ] Publish the checked draft prerelease and collect feedback before declaring a stable release.
+
+## Next product improvements
+
+- [ ] Manage application playback destinations from the panel, including reconnecting new streams.
+- [ ] Named preset library with search and recent files (portable file presets already work).
+- [ ] Diagnostic report with serial numbers and personal paths removed.
+- [ ] RU/EN interface translation and broader accessibility/HiDPI acceptance.
+
 ## Remaining functional coverage
 
 - [ ] MIDI DIN IN/OUT transfer using a real cable; enumeration is insufficient.

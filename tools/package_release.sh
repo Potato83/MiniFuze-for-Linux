@@ -8,11 +8,13 @@ if (($#)); then
   [[ $# == 1 && $1 == --binary ]] || { echo 'Usage: package_release.sh [--binary]' >&2; exit 2; }
   binary=true
 fi
-version=0.1.0-preview
+version=$(cat "$repo/VERSION")
+[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.-]+)?$ ]] || { echo 'Invalid VERSION' >&2; exit 1; }
 name="minifuze2-$version"
 suffix=source
 if $binary; then
-  suffix="linux-$(uname -m)"
+  suffix=${MF_PACKAGE_PLATFORM:-linux-$(uname -m)}
+  [[ $suffix =~ ^[A-Za-z0-9_.-]+$ ]] || { echo 'Invalid package platform' >&2; exit 1; }
   [[ -x $repo/build/minifuze2 && -x $repo/build/minifuze2-engine ]] || { echo 'Build first: make' >&2; exit 1; }
   command -v strip >/dev/null
 fi
@@ -24,7 +26,7 @@ trap 'rm -rf -- "$stage"' EXIT
 bundle="$stage/$name"
 mkdir -- "$bundle"
 copy_file() { mkdir -p -- "$bundle/$(dirname -- "$1")"; cp -- "$repo/$1" "$bundle/$1"; }
-for file in Makefile README.md README.ru.md CONTRIBUTING.md CHANGELOG.md TODO.md NOTICE.md LICENSE .gitignore .gitattributes; do copy_file "$file"; done
+for file in VERSION Makefile README.md README.ru.md CONTRIBUTING.md CHANGELOG.md TODO.md NOTICE.md LICENSE .gitignore .gitattributes; do copy_file "$file"; done
 for file in Makefile dkms.conf minifuze2_ctl.c minifuze2_selection.h minifuze2_uapi.h; do copy_file "kernel/$file"; done
 while IFS= read -r -d '' file; do
   relative=${file#"$repo/"}

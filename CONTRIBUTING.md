@@ -40,7 +40,7 @@ change. Include relevant validation and remaining limits in a pull request.
 Run the build and checks above, check both GitHub Actions jobs after pushing,
 and complete the publication checklist in TODO.md. The workflow tests Ubuntu
 software behavior and module compilation; it does not qualify physical hardware.
-The application preview is 0.1.0-preview; the independent kernel module version
+The application preview is 0.1.0-rc.1; the independent kernel module version
 is 0.2.0. These version numbers describe different components.
 
 Only source files belong in Git. `build/`, `dist/` and machine-specific state

@@ -16,6 +16,26 @@ The engine service persists the saved preset and unsaved working mix separately.
 Name edits are committed with Enter. Save stores the current preset; closing
 the window keeps both the engine and its working mix alive.
 
+## Updating a managed installation
+
+Close the desktop window, build the new version, then run:
+
+```sh
+bash tools/install_desktop.sh --update
+```
+
+The installer verifies the recorded hashes, updates the two binaries and icon,
+and refreshes the manifest. It retains the desktop entry, any custom ready-file
+argument, service configuration and user state. Only a service owned by this
+installation is stopped/restarted, and only if it was active. A reused research
+service is not restarted. If an update command fails, previous application files
+and their manifest are restored. Reopen the desktop to use its new executable.
+This does not replace the kernel module.
+
+The new application reads earlier Linux state versions 1–3 and writes version 4.
+Older applications cannot read version 4. Back up the state directory before
+updating if you may need to return to an older engine.
+
 ## Kernel control endpoint
 
 Standard audio uses ALSA. Extra hardware controls require the separate,

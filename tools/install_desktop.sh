@@ -8,6 +8,7 @@ base=${HOME:?HOME is required}/.local
 config=${XDG_CONFIG_HOME:-$HOME/.config}
 reuse=false
 remove=false
+update=false
 ready_file=''
 while (($#)); do
   case "$1" in
@@ -16,9 +17,13 @@ while (($#)); do
     --prefix) base=${2:?Missing prefix}; shift 2 ;;
     --config-home) config=${2:?Missing config directory}; shift 2 ;;
     --uninstall) remove=true; shift ;;
-    *) echo 'Usage: install_desktop.sh [--reuse-existing --ready-file FILE] [--prefix DIR --config-home DIR] [--uninstall]' >&2; exit 2 ;;
+    --update) update=true; shift ;;
+    *) echo 'Usage: install_desktop.sh [--reuse-existing --ready-file FILE] [--prefix DIR --config-home DIR] [--update | --uninstall]' >&2; exit 2 ;;
   esac
 done
+if $update && { $remove || $reuse || [[ -n $ready_file ]]; }; then
+  echo '--update preserves the installed service and desktop configuration; do not combine it with other modes.' >&2; exit 2
+fi
 for path in "$base" "$config"; do
   [[ $path == /* && $path != / ]] || { echo 'Use absolute installation directories' >&2; exit 1; }
 done
@@ -36,7 +41,7 @@ refresh_menu() {
     update-desktop-database "$base/share/applications" || echo 'Desktop cache refresh failed; application files remain valid.' >&2
   fi
 }
-if $remove; then
+if $remove || $update; then
   [[ -f $manifest && -f $owned && ! -L $manifest && ! -L $owned ]] || { echo 'Installation manifest missing' >&2; exit 1; }
   mapfile -t recorded < "$owned"
   [[ ${#recorded[@]} == 4 || ${#recorded[@]} == 5 ]] || { echo 'Incomplete installation manifest' >&2; exit 1; }
@@ -48,6 +53,8 @@ if $remove; then
   fi
   expected=$(sha256sum -- "${recorded[@]}")
   [[ $(cat -- "$manifest") == "$expected" ]] || { echo 'Installed files changed; inspect before removing' >&2; exit 1; }
+fi
+if $remove; then
   if ((${#recorded[@]} == 5)); then
     systemctl --user disable --now minifuze2.service
   fi
@@ -58,6 +65,55 @@ if $remove; then
   exit
 fi
 [[ -x $repo/build/minifuze2 && -x $repo/build/minifuze2-engine ]] || { echo 'Build first: make' >&2; exit 1; }
+if $update; then
+  backup=$(mktemp -d "$repo/build/.desktop-update.XXXXXXXX")
+  active=false
+  if ((${#recorded[@]} == 5)) && systemctl --user is-active --quiet minifuze2.service; then active=true; fi
+  for i in "${!recorded[@]}"; do cp -p -- "${recorded[$i]}" "$backup/$i"; done
+  cp -p -- "$manifest" "$backup/manifest"
+  committed=false
+  stopped=false
+  replacement=''
+  replace_file() {
+    local source=$1 target=$2 mode=$3
+    replacement=$(mktemp "$(dirname -- "$target")/.minifuze-update.XXXXXXXX")
+    cat -- "$source" > "$replacement"
+    chmod "$mode" "$replacement"
+    mv -f -- "$replacement" "$target"
+    replacement=''
+  }
+  rollback_update() {
+    local result=$?
+    trap - EXIT INT TERM
+    [[ -z $replacement ]] || rm -f -- "$replacement"
+    if ! $committed; then
+      for i in "${!recorded[@]}"; do
+        replace_file "$backup/$i" "${recorded[$i]}" "$(stat -c %a -- "$backup/$i")"
+      done
+      replace_file "$backup/manifest" "$manifest" 600
+      if $active && $stopped; then systemctl --user start minifuze2.service || true; fi
+      echo 'Update failed; previous application files restored.' >&2
+    fi
+    rm -rf -- "$backup"
+    exit "$result"
+  }
+  trap rollback_update EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  if $active; then
+    systemctl --user stop minifuze2.service
+    stopped=true
+  fi
+  replace_file "$repo/build/minifuze2" "${targets[0]}" 755
+  replace_file "$repo/build/minifuze2-engine" "${targets[1]}" 755
+  replace_file "$repo/packaging/io.github.minifuze2.Control.svg" "${targets[2]}" 644
+  sha256sum -- "${recorded[@]}" > "$backup/new-manifest"
+  replace_file "$backup/new-manifest" "$manifest" 600
+  if $active; then systemctl --user start minifuze2.service; fi
+  committed=true
+  echo 'Updated application files. Presets, working mix and service configuration retained. Reopen the desktop window.'
+  exit
+fi
 $reuse || targets+=("$unit")
 for target in "${targets[@]}" "$manifest" "$owned"; do
   [[ ! -e $target && ! -L $target ]] || { echo "Already exists; inspect before replacing: $target" >&2; exit 1; }

@@ -19,17 +19,20 @@ static float quantized(float a) {
 }
 J *factory_state(void) {
   J *s = json_object_new_object(), *mixes = json_object_new_array();
-  put(s, "version", json_object_new_int(1));
+  put(s, "version", json_object_new_int(2));
   put(s, "mixes", mixes);
   for (int m = 0; m < 3; m++) {
     J *mix = json_object_new_object(), *strips = json_object_new_array();
     put(mix, "master_db", json_object_new_double(0));
+    put(mix, "master_mute", json_object_new_boolean(false));
+    put(mix, "dim", json_object_new_boolean(false));
     put(mix, "strips", strips);
     json_object_array_add(mixes, mix);
     for (int i = 0; i < 6; i++) {
       J *strip = json_object_new_object(), *pans = json_object_new_array();
       put(strip, "level_db", json_object_new_double(0));
       put(strip, "mute", json_object_new_boolean(i != m + 2));
+      put(strip, "solo", json_object_new_boolean(false));
       put(strip, "pans", pans);
       json_object_array_add(pans, json_object_new_double(i < 2 ? .5 : 0));
       if (i >= 2)
@@ -40,9 +43,10 @@ J *factory_state(void) {
   return s;
 }
 int matrix(J *s, float out[6][10]) {
+  int version = json_object_get_int(get(s, "version"));
   if (!fields(s, "version,mixes") || !integer(get(s, "version")) ||
-      json_object_get_int(get(s, "version")) != 1)
-    return fail("Expected mixer version 1");
+      (version != 1 && version != 2))
+    return fail("Expected mixer version 1 or 2");
   J *mixes = get(s, "mixes");
   if (!json_object_is_type(mixes, json_type_array) ||
       json_object_array_length(mixes) != 3)
@@ -50,27 +54,43 @@ int matrix(J *s, float out[6][10]) {
   memset(out, 0, 60 * sizeof(float));
   for (int m = 0; m < 3; m++) {
     J *mix = json_object_array_get_idx(mixes, m), *strips = get(mix, "strips");
-    if (!fields(mix, "master_db,strips") ||
+    if (!fields(mix, version == 1 ? "master_db,strips"
+                                  : "master_db,master_mute,dim,strips") ||
         !numeric(get(mix, "master_db"), -60, 0) ||
+        (version == 2 &&
+         (!json_object_is_type(get(mix, "master_mute"), json_type_boolean) ||
+          !json_object_is_type(get(mix, "dim"), json_type_boolean))) ||
         !json_object_is_type(strips, json_type_array) ||
         json_object_array_length(strips) != 6)
       return fail("Invalid mix");
     float master =
         db_gain((float)json_object_get_double(get(mix, "master_db")));
+    if (json_object_get_boolean(get(mix, "master_mute")))
+      master = 0;
+    if (json_object_get_boolean(get(mix, "dim")))
+      master *= .1f;
+    bool any_solo = false;
+    for (int i = 0; i < 6; i++)
+      any_solo |= json_object_get_boolean(
+          get(json_object_array_get_idx(strips, i), "solo"));
     int col = 0;
     for (int i = 0; i < 6; i++) {
       J *strip = json_object_array_get_idx(strips, i),
         *pans = get(strip, "pans");
       int count = i < 2 ? 1 : 2;
-      if (!fields(strip, "level_db,mute,pans") ||
+      if (!fields(strip, version == 1 ? "level_db,mute,pans"
+                                      : "level_db,mute,solo,pans") ||
           !numeric(get(strip, "level_db"), -60, 0) ||
           !json_object_is_type(get(strip, "mute"), json_type_boolean) ||
+          (version == 2 &&
+           !json_object_is_type(get(strip, "solo"), json_type_boolean)) ||
           !json_object_is_type(pans, json_type_array) ||
           (int)json_object_array_length(pans) != count)
         return fail("Invalid strip");
       float gain =
           db_gain((float)json_object_get_double(get(strip, "level_db")));
-      bool muted = json_object_get_boolean(get(strip, "mute"));
+      bool muted = json_object_get_boolean(get(strip, "mute")) ||
+                   (any_solo && !json_object_get_boolean(get(strip, "solo")));
       for (int c = 0; c < count; c++, col++) {
         J *p = json_object_array_get_idx(pans, c);
         if (!numeric(p, 0, 1))
@@ -162,10 +182,11 @@ J *document(J *state, J *preset, J *refs) {
     }
   }
   J *d = json_object_new_object();
-  put(d, "version", json_object_new_int(3));
+  put(d, "version", json_object_new_int(4));
   put(d, "mixer", copy(state));
-  put(d, "mfp_template", copy(preset));
+  put(d, "mfp_template", preset_is_native(preset) ? NULL : copy(preset));
   put(d, "peakrefs", copy(refs));
+  put(d, "presentation", preset_presentation(preset));
   return d;
 }
 int unpack_document(J *d, J **state, J **preset, J **refs) {
@@ -173,9 +194,12 @@ int unpack_document(J *d, J **state, J **preset, J **refs) {
   J *s = d, *p = NULL, *r = NULL;
   J *v = get(d, "version");
   int version = integer(v) ? json_object_get_int(v) : 0;
-  if (version == 2 || version == 3) {
+  if ((version == 2 && !fields(d, "version,mixes")) || version == 3 ||
+      version == 4) {
     if (!fields(d, version == 2 ? "version,mixer,mfp_template"
-                                : "version,mixer,mfp_template,peakrefs"))
+                   : version == 3
+                       ? "version,mixer,mfp_template,peakrefs"
+                       : "version,mixer,mfp_template,peakrefs,presentation"))
       return fail("Invalid document fields");
     s = get(d, "mixer");
     p = get(d, "mfp_template");
@@ -187,7 +211,7 @@ int unpack_document(J *d, J **state, J **preset, J **refs) {
         return -1;
       json_object_put(check);
     }
-    r = version == 3 ? copy(get(d, "peakrefs")) : preset_refs(p);
+    r = version >= 3 ? copy(get(d, "peakrefs")) : preset_refs(p);
   } else
     r = default_refs();
   float w[6][10];
@@ -209,8 +233,42 @@ int unpack_document(J *d, J **state, J **preset, J **refs) {
       return fail("Preset references differ from metadata");
     }
   }
+  if (version == 4 && !get(d, "presentation")) {
+    json_object_put(r);
+    return fail("Missing Linux presentation");
+  }
+  J *native = native_preset(s, r, version == 4 ? get(d, "presentation") : NULL);
+  if (!native) {
+    json_object_put(r);
+    return -1;
+  }
+  if (version == 4 && p) {
+    J *presentation = preset_presentation(p);
+    bool same =
+        presentation && json_object_equal(presentation, get(d, "presentation"));
+    if (presentation)
+      json_object_put(presentation);
+    if (!same) {
+      json_object_put(native);
+      json_object_put(r);
+      return fail("Windows template and Linux presentation differ");
+    }
+  }
   *state = copy(s);
-  *preset = copy(p);
+  if (json_object_get_int(get(s, "version")) == 1) {
+    put(*state, "version", json_object_new_int(2));
+    J *mixes = get(*state, "mixes");
+    for (int m = 0; m < 3; m++) {
+      J *mix = json_object_array_get_idx(mixes, m);
+      put(mix, "master_mute", json_object_new_boolean(false));
+      put(mix, "dim", json_object_new_boolean(false));
+      for (int i = 0; i < 6; i++)
+        put(json_object_array_get_idx(get(mix, "strips"), i), "solo",
+            json_object_new_boolean(false));
+    }
+  }
+  *preset = p ? copy(p) : json_object_get(native);
+  json_object_put(native);
   *refs = r;
   return 0;
 }

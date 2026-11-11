@@ -1,0 +1,230 @@
+{
+  "version": "0.1.0-rc.1",
+  "kernel": "7.3.1-1-cachyos",
+  "rate": 48000,
+  "probe_amplitude_dbfs": -46.020599913279625,
+  "analog_return": true,
+  "phantom_power_changed": false,
+  "stages": [
+    {
+      "name": "Factory routes and analog return",
+      "max_software_amplitude_error": 1.979756659191161e-09,
+      "ok": true,
+      "analog_return_rms": 0.0018702049618882243,
+      "software_left_rms": 0.003535533906505769,
+      "analog_ok": true
+    },
+    {
+      "name": "Source -6 dB",
+      "max_software_amplitude_error": 1.9908137214075377e-09,
+      "ok": true,
+      "analog_return_rms": 0.000937585968810571,
+      "software_left_rms": 0.0017719643581362249,
+      "expected_analog_rms": 0.0009376729960980087,
+      "analog_tolerance_rms": 4.688364980490044e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "Master -12 dB",
+      "max_software_amplitude_error": 1.9797279272997283e-09,
+      "ok": true,
+      "analog_return_rms": 0.00047061048295382997,
+      "software_left_rms": 0.0008880859386179804,
+      "expected_analog_rms": 0.00047064783495851767,
+      "analog_tolerance_rms": 2.3532391747925885e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "Dim -20 dB",
+      "max_software_amplitude_error": 1.9797277852759827e-09,
+      "ok": true,
+      "analog_return_rms": 0.00018938397732553907,
+      "software_left_rms": 0.0003535533967406054,
+      "expected_analog_rms": 0.00018932717846908346,
+      "analog_tolerance_rms": 9.466358923454174e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Master Mute",
+      "max_software_amplitude_error": 1.9797277806751545e-09,
+      "ok": true,
+      "analog_return_rms": 2.904166369324108e-05,
+      "software_left_rms": 0.0,
+      "expected_analog_rms": 2.9612195612322934e-05,
+      "analog_tolerance_rms": 8.88365868369688e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Source Mute",
+      "max_software_amplitude_error": 1.9797279225930532e-09,
+      "ok": true,
+      "analog_return_rms": 2.9175007878777072e-05,
+      "software_left_rms": 0.0,
+      "expected_analog_rms": 2.9612195612322934e-05,
+      "analog_tolerance_rms": 8.88365868369688e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Pan both channels right",
+      "max_software_amplitude_error": 1.990535451439788e-09,
+      "ok": true,
+      "analog_return_rms": 2.9881176043570706e-05,
+      "software_left_rms": 1.9905354513670837e-09,
+      "expected_analog_rms": 2.961219563103832e-05,
+      "analog_tolerance_rms": 8.88365868369688e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Pan both channels left",
+      "max_software_amplitude_error": 1.990535451745952e-09,
+      "ok": true,
+      "analog_return_rms": 0.0026443695923574536,
+      "software_left_rms": 0.0050000000001035605,
+      "expected_analog_rms": 0.0026447034455372087,
+      "analog_tolerance_rms": 0.00013223517227686044,
+      "analog_ok": true
+    },
+    {
+      "name": "Solo main with another active source",
+      "max_software_amplitude_error": 1.9797566608098564e-09,
+      "ok": true,
+      "analog_return_rms": 0.0018698438477628004,
+      "software_left_rms": 0.003535533906505769,
+      "expected_analog_rms": 0.0018702049618882243,
+      "analog_tolerance_rms": 9.351024809441122e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "Mute wins over Solo",
+      "max_software_amplitude_error": 1.979727782511074e-09,
+      "ok": true,
+      "analog_return_rms": 2.976672407808402e-05,
+      "software_left_rms": 0.0,
+      "expected_analog_rms": 2.9612195612322934e-05,
+      "analog_tolerance_rms": 8.88365868369688e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Multiple Solo channels",
+      "max_software_amplitude_error": 1.9827652102993684e-09,
+      "ok": true,
+      "analog_return_rms": 0.0026444680312005,
+      "software_left_rms": 0.005000000002658099,
+      "expected_analog_rms": 0.0026447034468882386,
+      "analog_tolerance_rms": 0.00013223517234441193,
+      "analog_ok": true
+    },
+    {
+      "name": "Solo on Mix 3/4 leaves monitor independent",
+      "max_software_amplitude_error": 1.979756660055715e-09,
+      "ok": true,
+      "analog_return_rms": 0.001869543941824066,
+      "software_left_rms": 0.003535533906505769,
+      "expected_analog_rms": 0.0018702049618882243,
+      "analog_tolerance_rms": 9.351024809441122e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "Undo returns to saved mix",
+      "ok": true
+    },
+    {
+      "name": "Redo restores Dim on physical return",
+      "max_software_amplitude_error": 1.9797277857747594e-09,
+      "ok": true,
+      "analog_return_rms": 0.0001892742490191055,
+      "software_left_rms": 0.0003535533967406054,
+      "expected_analog_rms": 0.00018932717846908346,
+      "analog_tolerance_rms": 9.466358923454174e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Portable preset with selected hardware",
+      "ok": true
+    },
+    {
+      "name": "Service restart retains route and unsaved mix",
+      "ok": true
+    },
+    {
+      "name": "Signal after service restart",
+      "max_software_amplitude_error": 1.979727777510849e-09,
+      "ok": true,
+      "analog_return_rms": 0.00018929508719584047,
+      "software_left_rms": 0.0003535533967406054,
+      "expected_analog_rms": 0.00018932717846908346,
+      "analog_tolerance_rms": 9.466358923454174e-06,
+      "analog_ok": true
+    },
+    {
+      "name": "Signal after an owned hardware link is removed",
+      "max_software_amplitude_error": 1.979756664232283e-09,
+      "ok": true,
+      "analog_return_rms": 0.0018699563640320863,
+      "software_left_rms": 0.003535533906505769,
+      "expected_analog_rms": 0.0018702049618882243,
+      "analog_tolerance_rms": 9.351024809441122e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "Explicit disconnect",
+      "ok": true
+    },
+    {
+      "name": "Signal after explicit reconnect",
+      "max_software_amplitude_error": 1.97975665964602e-09,
+      "ok": true,
+      "analog_return_rms": 0.0018699055547503852,
+      "software_left_rms": 0.003535533906505769,
+      "expected_analog_rms": 0.0018702049618882243,
+      "analog_tolerance_rms": 9.351024809441122e-05,
+      "analog_ok": true
+    },
+    {
+      "name": "INST 1 readback",
+      "ok": true
+    },
+    {
+      "name": "INST 2 readback",
+      "ok": true
+    },
+    {
+      "name": "direct_mono readback",
+      "ok": true
+    },
+    {
+      "name": "loopback readback",
+      "ok": true
+    },
+    {
+      "name": "loopback_to_usb12 readback",
+      "ok": true
+    },
+    {
+      "name": "loopback_to_monitor readback",
+      "ok": true
+    },
+    {
+      "name": "All switches restored; +48V retained",
+      "ok": true
+    },
+    {
+      "name": "Default devices unchanged",
+      "ok": true
+    },
+    {
+      "name": "Forced clock settings unchanged",
+      "ok": true
+    },
+    {
+      "name": "Owned graph removed",
+      "ok": true
+    }
+  ],
+  "hardware_audio_connected": true,
+  "hardware_control_available": true,
+  "actual_rate": 48000,
+  "analog_noise_rms": 2.9612195612322934e-05,
+  "engine_sha256": "ef1aa355a8f0b4c3b5cf6bd2e122d33dd9fe94dfcbe19dc769d113aece8643f2",
+  "ok": true
+}

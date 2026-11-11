@@ -9,10 +9,12 @@ the audio service running.
 
 [Инструкция по-русски](README.ru.md)
 
-**Status: 0.1.0 preview.** Tested on one MiniFuse 2 with firmware 1.5.0,
+**Status: 0.1.0-rc.1, release candidate.** Tested on one MiniFuse 2 with firmware 1.5.0,
 CachyOS x86_64, PipeWire 1.6.9 and kernel 7.3.0-2-cachyos. Other distributions
 and future kernels require testing. This is not an Arturia product.
-The current desktop interface is in Russian.
+The current desktop interface is in Russian. The new studio features have local
+software and isolated GTK coverage; physical acceptance of this release candidate
+is still pending. See [release notes](docs/release-notes.md).
 
 ![Desktop in an isolated software-only test session](docs/images/desktop-preview.png)
 
@@ -20,7 +22,10 @@ The current desktop interface is in Russian.
 
 - INST 1/2, Direct Mono, shared +48V and three hardware loopback switches,
   with capability checks and readback through `/dev/minifuze2ctl`.
-- Three software stereo mixes; gain, pan, mute and master level.
+- Three software stereo mixes; gain, independent left/right pan, Mute and master level.
+- Solo per source, master Mute and Dim (−20 dB), precise numeric gain entry and double-click reset.
+- Undo/Redo for 32 software changes; Ctrl+Z, Ctrl+Shift+Z, Ctrl+S and Ctrl+O.
+- Portable Linux `.json` presets. Names, input Link and virtual-strip visibility work without a Windows `.mfp` import.
 - Four stereo playback endpoints and four recording endpoints in PipeWire.
 - Hardware input VU and software meters, peak/clip preferences and PeakRef.
 - Linux presets, unsaved working-mix recovery, Windows `.mfp` import/export,
@@ -28,7 +33,7 @@ The current desktop interface is in Russian.
 - Rate/buffer selection with actual-mode verification and Auto fallback.
   Forced settings affect the shared PipeWire server; manual changes are refused
   while another physical audio device is active.
-- Light/dark desktop themes, switched instantly in Settings → Appearance.
+- Compact dark studio desktop by default; light/dark themes switch instantly in Settings → Appearance.
   The choice is saved in `$XDG_CONFIG_HOME/minifuze2/desktop.ini` separately
   from audio and preset settings.
 - A local web panel remains available as a fallback.
@@ -42,7 +47,7 @@ and MIDI enumeration are provided by Linux ALSA, not a replacement audio driver.
 | Target | Status |
 | --- | --- |
 | CachyOS, x86_64, kernel 7.3.0-2-cachyos, PipeWire 1.6.9, MiniFuse 2 firmware 1.5.0 | Built and tested on one physical interface |
-| Ubuntu 24.04 | Ubuntu CI build and isolated software tests are configured; first GitHub run pending, no physical MiniFuse qualification |
+| Ubuntu 24.04 | Ubuntu CI build and isolated software tests are configured; no physical MiniFuse qualification |
 | Other Linux distributions | Expected to work with the dependencies below, but hardware, installer and kernel-module behavior still need testing on each distribution |
 | Windows and macOS | Not supported |
 
@@ -104,7 +109,12 @@ systemctl --user stop minifuze2.service
 ```
 
 Uninstall application files with `bash tools/install_desktop.sh --uninstall`.
-Presets and the kernel module are retained. The installer verifies its file
+Presets and the kernel module are retained. Update an existing managed installation
+with `bash tools/install_desktop.sh --update` after closing its window. It updates
+owned application files, retains the installed service configuration, and restores
+previous files if an update command fails. An active owned service briefly stops
+and restarts. Reopen the desktop afterwards.
+The installer verifies its file
 manifest before removing files. See [docs/installation.md](docs/installation.md)
 for the separate kernel-module setup and removal.
 
@@ -116,6 +126,7 @@ preparation, and [CHANGELOG.md](CHANGELOG.md) for preview changes.
 ```sh
 make check
 make build/desktop-smoke
+dbus-run-session -- env MINIFUZE_RUNTIME_TESTS=1 make check
 python3 tools/test_desktop.py
 ```
 
@@ -141,3 +152,17 @@ Local source archive: `bash tools/package_release.sh`. Add `--binary` to include
 the two executables built for the current Linux system. Archives carry checksums;
 their binaries use system libraries and are not universal Linux packages.
 Neither command publishes anything to GitHub.
+
+Studio controls and file compatibility are described in [the desktop guide](docs/desktop-design.md).
+The candidate also passed a 48 kHz physical loopback, same-port USB reconnect
+and real user-service update on CachyOS; see [hardware acceptance](docs/hardware-validation.md).
+New files use Linux document version 4; the application reads earlier versions 1–3.
+Keep backups before switching back to an older application, which cannot read the new format.
+Linux presets include Solo/Dim/master Mute; Windows `.mfp` export requires turning
+these controls off and retaining an imported Windows template. Hardware switches,
+device selection and global rate/buffer settings are not included in exported presets.
+
+A `vVERSION` tag triggers the checked [release workflow](.github/workflows/release.yml).
+It creates a **draft prerelease** with source and Ubuntu 24.04 x86_64 binary archives
+after application, isolated GTK and kernel build jobs pass. See [release notes](docs/release-notes.md)
+and the acceptance checklist in [TODO.md](TODO.md) before publishing that draft.

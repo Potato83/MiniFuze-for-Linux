@@ -1,0 +1,10 @@
+{
+  "fresh_user_service_started": true,
+  "version": "0.1.0-rc.1",
+  "active_service_restarted": true,
+  "mixer_retained": true,
+  "presentation_retained": true,
+  "selected_card_retained": true,
+  "unsaved_flag_retained": true,
+  "ok": true
+}

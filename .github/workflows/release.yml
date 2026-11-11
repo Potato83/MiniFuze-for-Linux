@@ -1,0 +1,28 @@
+name: Prepare GitHub release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  validate:
+    uses: ./.github/workflows/build.yml
+  draft:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: minifuze-release-files
+          path: dist
+      - name: Verify files and create a draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$RELEASE_TAG" = "v$(cat VERSION)"
+          (cd dist && sha256sum -c ./*.sha256)
+          gh release create "$RELEASE_TAG" dist/*.tar.gz dist/*.sha256 --verify-tag --draft --prerelease --title "MiniFuse 2 for Linux $RELEASE_TAG" --notes-file docs/release-notes.md

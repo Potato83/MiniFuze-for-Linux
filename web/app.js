@@ -3,6 +3,7 @@ const names=['Input 1','Input 2','Main 1/2','Virtual 3/4','Virtual 5/6','Virtual
 let data=null,state=null,mix=0,timer=null,queue=Promise.resolve(),pending=0,errorTimer,editRevision=0,replacing=false,renderedSurface=null,monoPending=false,phantomPending=false,routingPending=false,meterPreferencesPending=false;
 let audioPending=false,audioDraft=false,audioOptions=null;
 const $=id=>document.getElementById(id);
+function canEdit(){return !!(data?.preset?.editable||data?.preset?.has_template)}
 function routeSelected(){return !!(data?.hardware||data?.route_port||data?.route_selected)}
 const referenceMarks=[0,-6,-12,-18,-24,-30,-36,-42,-60];
 const referenceDrafts=new Map();
@@ -49,7 +50,7 @@ $('audio-reset').onclick=()=>{
 };
 function action(path,body,message,receive){const revision=editRevision;pending++;queue=queue.catch(()=>{}).then(async()=>{try{const result=await request(path,typeof body==='function'?await body():body);if(receive){receive(result)}else{data=result;if(revision===editRevision&&!timer){syncMixer()}else{renderStatus();renderMeters()}}if(message)$('operation-status').textContent=message}catch(e){error(e.message);try{data=await fetch('/api/state').then(r=>r.json());if(revision===editRevision&&!timer){syncMixer()}}catch(_){}}finally{pending--}});return queue}
 function sendMixer(){clearTimeout(timer);const update=structuredClone(state);timer=null;action('/api/mixer',update,'Микс обновлён')}
-function change(source,key,value,panChannel){if(replacing)return;editRevision++;if(source==='master'){state.mixes[mix].master_db=value}else if(key==='pans'){state.mixes[mix].strips[source].pans[panChannel]=value}else{state.mixes[mix].strips[source][key]=value;if(source<2&&data?.preset?.links?.[mix]){const peer=1-source;state.mixes[mix].strips[peer][key]=value;document.querySelectorAll(`[data-source="${peer}"][data-level]`).forEach(el=>{if(key==='level_db')el.value=value});document.querySelectorAll(`[data-mute="${peer}"]`).forEach(el=>{if(key==='mute')el.setAttribute('aria-pressed',value)});if(key==='level_db')$('gain-'+peer).textContent=(value<=-59.9?'−∞':value.toFixed(1))+' dB'}}clearTimeout(timer);timer=setTimeout(sendMixer,160)}
+function change(source,key,value,panChannel){if(replacing)return;editRevision++;if(source==='master'){state.mixes[mix][key==='level_db'?'master_db':key]=value}else if(key==='pans'){state.mixes[mix].strips[source].pans[panChannel]=value}else{state.mixes[mix].strips[source][key]=value;if(source<2&&data?.preset?.links?.[mix]){const peer=1-source;state.mixes[mix].strips[peer][key]=value;document.querySelectorAll(`[data-source="${peer}"][data-level]`).forEach(el=>{if(key==='level_db')el.value=value});document.querySelectorAll(`[data-mute="${peer}"]`).forEach(el=>{if(key==='mute')el.setAttribute('aria-pressed',value)});if(key==='level_db')$('gain-'+peer).textContent=(value<=-59.9?'−∞':value.toFixed(1))+' dB'}}clearTimeout(timer);timer=setTimeout(sendMixer,160)}
 // Loading a preset supersedes unsent fader edits. Previously queued writes
 // finish first, and controls stay locked until the replacement is acknowledged.
 function replaceMixer(path,message,body={}){
@@ -126,23 +127,26 @@ function referenceInputKey(e){
 function scale(){return '<div class="scale">'+[0,6,12,18,24,30,42,60].map(n=>`<span data-scale="${n}">${n}</span>`).join('')+'</div>'}
 function db(value){return value>0?20*Math.log10(value):-120}
 function dbText(value){const n=db(value);return n<=-99?'−∞':n.toFixed(1)+' dBFS'}
-function render(){if(!state)return;const current=state.mixes[mix];let html='';names.forEach((name,i)=>{if(i>=3&&data?.preset?.virtual_visible?.[mix]?.[i-3]===false)return;const strip=current.strips[i];const indices=i<2?[6+i]:[6+2+(i-2)*2,7+2+(i-2)*2];html+=`<article class="strip"><h3>${name}</h3>${i>=3&&data?.preset?.has_template?`<button class="remove-channel quiet" data-remove="${i-3}" aria-label="Скрыть ${name}" title="Скрыть и сбросить уровень, mute и панорамы">×</button>`:''}<input class="alias name-input" type="text" maxlength="256" data-input-name="${i}" aria-label="Имя ${name}" placeholder="Имя полосы" disabled><span class="kind">${i<2?'Аналоговый вход':'Звук приложения'}</span><div class="pan-controls">${strip.pans.map((p,ch)=>`<div class="pan-control"><label for="pan-${i}-${ch}">${strip.pans.length===1?'Панорама':ch===0?'Левый':'Правый'}</label><input id="pan-${i}-${ch}" type="range" min="0" max="1" step=".01" value="${p}" data-source="${i}" data-pan="${ch}" aria-label="Панорама ${name}, канал ${ch+1}"><div class="pan-endpoints"><span>L</span><span>R</span></div></div>`).join('')}</div><div class="fader-area">${scale()}${referenceMeters(indices,i)}<input class="vertical-fader" type="range" min="-60" max="0" step=".5" value="${strip.level_db}" data-source="${i}" data-level aria-label="Уровень ${name}"></div><output class="gain" id="gain-${i}">${strip.level_db<=-59.9?'−∞':strip.level_db.toFixed(1)} dB</output><span class="peak-readout" data-level-label="${indices.join(',')}">—</span><span class="clip-label" data-clip="${indices.join(',')}"></span>${referenceReadout(i)}<button class="mute" data-mute="${i}" aria-label="Заглушить ${name}" aria-pressed="${strip.mute}">Mute</button></article>`});const output=[2*mix,2*mix+1];html+=`<article class="strip master"><h3>Общий выход</h3><span class="kind">${mix===0?'Монитор и наушники':'Микс '+(mix===1?'3/4':'5/6')}</span><div class="pan-controls">Стереомикс<br>после общего фейдера</div><div class="fader-area">${scale()}${referenceMeters(output,6)}<input class="vertical-fader" type="range" min="-60" max="0" step=".5" value="${current.master_db}" data-source="master" data-level aria-label="Уровень общего выхода"></div><output class="gain" id="gain-master">${current.master_db<=-59.9?'−∞':current.master_db.toFixed(1)} dB</output><span class="peak-readout" data-level-label="${output.join(',')}">—</span><span class="clip-label" data-clip="${output.join(',')}"></span>${referenceReadout(6)}<span class="muted small">${mix===0?'Loopback Main 7/8':mix===1?'Источник Mix 3/4':'Источник Mix 5/6'}</span></article>`;$('strips').innerHTML=html;const count=3+(data?.preset?.virtual_visible?.[mix]??[true,true,true]).filter(Boolean).length;$('strips').style.gridTemplateColumns=`repeat(${count},minmax(107px,1fr)) minmax(130px,1.15fr)`;$('strips').style.minWidth=(count*107+130)+'px';renderedSurface=surfaceKey();document.querySelectorAll('[data-mix]').forEach(b=>b.setAttribute('aria-selected',Number(b.dataset.mix)===mix));$('mix-description').textContent=['На монитор, наушники и Loopback Main 7/8','Для записи из MiniFuse Mix 3/4','Для записи из MiniFuse Mix 5/6'][mix];renderStatus();renderMeters()}
+function render(){if(!state)return;const current=state.mixes[mix];let html='';names.forEach((name,i)=>{if(i>=3&&data?.preset?.virtual_visible?.[mix]?.[i-3]===false)return;const strip=current.strips[i];const indices=i<2?[6+i]:[6+2+(i-2)*2,7+2+(i-2)*2];html+=`<article class="strip"><h3>${name}</h3>${i>=3&&canEdit()?`<button class="remove-channel quiet" data-remove="${i-3}" aria-label="Скрыть ${name}" title="Скрыть и сбросить уровень, mute и панорамы">×</button>`:''}<input class="alias name-input" type="text" maxlength="256" data-input-name="${i}" aria-label="Имя ${name}" placeholder="Имя полосы" disabled><span class="kind">${i<2?'Аналоговый вход':'Звук приложения'}</span><div class="pan-controls">${strip.pans.map((p,ch)=>`<div class="pan-control"><label for="pan-${i}-${ch}">${strip.pans.length===1?'Панорама':ch===0?'Левый':'Правый'}</label><input id="pan-${i}-${ch}" type="range" min="0" max="1" step=".01" value="${p}" data-source="${i}" data-pan="${ch}" aria-label="Панорама ${name}, канал ${ch+1}"><div class="pan-endpoints"><span>L</span><span>R</span></div></div>`).join('')}</div><div class="fader-area">${scale()}${referenceMeters(indices,i)}<input class="vertical-fader" type="range" min="-60" max="0" step=".5" value="${strip.level_db}" data-source="${i}" data-level aria-label="Уровень ${name}"></div><output class="gain" id="gain-${i}">${strip.level_db<=-59.9?'−∞':strip.level_db.toFixed(1)} dB</output><span class="peak-readout" data-level-label="${indices.join(',')}">—</span><span class="clip-label" data-clip="${indices.join(',')}"></span>${referenceReadout(i)}<button class="mute" data-mute="${i}" aria-label="Заглушить ${name}" aria-pressed="${strip.mute}">Mute</button><button class="solo" data-solo="${i}" aria-pressed="${!!strip.solo}">Solo</button></article>`});const output=[2*mix,2*mix+1];html+=`<article class="strip master"><h3>Общий выход</h3><span class="kind">${mix===0?'Монитор и наушники':'Микс '+(mix===1?'3/4':'5/6')}</span><div class="pan-controls">Стереомикс<br>после общего фейдера</div><div class="fader-area">${scale()}${referenceMeters(output,6)}<input class="vertical-fader" type="range" min="-60" max="0" step=".5" value="${current.master_db}" data-source="master" data-level aria-label="Уровень общего выхода"></div><output class="gain" id="gain-master">${current.master_db<=-59.9?'−∞':current.master_db.toFixed(1)} dB</output><span class="peak-readout" data-level-label="${output.join(',')}">—</span><span class="clip-label" data-clip="${output.join(',')}"></span>${referenceReadout(6)}<button class="mute" data-master="master_mute" aria-pressed="${!!current.master_mute}">Mute выхода</button><button class="solo" data-master="dim" aria-pressed="${!!current.dim}">Dim −20 dB</button><span class="muted small">${mix===0?'Loopback Main 7/8':mix===1?'Источник Mix 3/4':'Источник Mix 5/6'}</span></article>`;$('strips').innerHTML=html;const count=3+(data?.preset?.virtual_visible?.[mix]??[true,true,true]).filter(Boolean).length;$('strips').style.gridTemplateColumns=`repeat(${count},minmax(107px,1fr)) minmax(130px,1.15fr)`;$('strips').style.minWidth=(count*107+130)+'px';renderedSurface=surfaceKey();document.querySelectorAll('[data-mix]').forEach(b=>b.setAttribute('aria-selected',Number(b.dataset.mix)===mix));$('mix-description').textContent=['На монитор, наушники и Loopback Main 7/8','Для записи из MiniFuse Mix 3/4','Для записи из MiniFuse Mix 5/6'][mix];renderStatus();renderMeters()}
 function renderPreset(){
   const preset=data.preset;
-  $('link-inputs').disabled=replacing||!preset?.has_template;
+  $('link-inputs').disabled=replacing||!(preset?.editable||preset?.has_template);
   $('link-inputs').setAttribute('aria-pressed',!!preset?.links?.[mix]);
-  $('virtual-controls').hidden=!preset?.has_template;
+  $('virtual-controls').hidden=!(preset?.editable||preset?.has_template);
   document.querySelectorAll('[data-add-virtual]').forEach(el=>{el.hidden=preset?.virtual_visible?.[mix]?.[Number(el.dataset.addVirtual)]!==false;el.disabled=replacing});
   document.querySelectorAll('[data-input-name]').forEach(el=>{
     const alias=preset?.input_names[Number(el.dataset.inputName)]||'';
     if(replacing||document.activeElement!==el)el.value=alias;
-    el.title=alias;el.disabled=replacing||!preset?.has_template;
+    el.title=alias;el.disabled=replacing||!(preset?.editable||preset?.has_template);
   });
   if(replacing||document.activeElement!==$('mix-name'))$('mix-name').value=preset?.mix_names[mix]||'';
-  $('mix-name').disabled=replacing||!preset?.has_template;
+  $('mix-name').disabled=replacing||!(preset?.editable||preset?.has_template);
   $('import-mfp').disabled=replacing||!$('mfp-file').files?.length;
   $('mfp-file').disabled=replacing;
   $('export-mfp').disabled=replacing||!preset?.has_template;
+  $('export-native').disabled=replacing;
+  $('undo').disabled=replacing||!data.can_undo;
+  $('redo').disabled=replacing||!data.can_redo;
 }
 function renderMono(){
   const device=data?.device,supported=device?.ok&&device.controls?.direct_mono===true;
@@ -234,7 +238,7 @@ $('strips').addEventListener('change',e=>{const el=e.target;if(el.matches('[data
 $('strips').addEventListener('keydown',referenceInputKey);
 $('strips').addEventListener('focusout',e=>{if(e.target.matches('[data-input-name]'))rename('input',Number(e.target.dataset.inputName),e.target.value)});
 function rename(kind,index,name){
-  if(replacing||!data?.preset?.has_template)return;
+  if(replacing||!canEdit())return;
   const current=kind==='input'?data.preset.input_names[index]:data.preset.mix_names[index];
   if(name===current)return;
   if(Array.from(name).length>128){error('Имя должно содержать не более 128 символов');return}
@@ -253,7 +257,7 @@ function nameKey(e){
 $('strips').addEventListener('keydown',nameKey);
 $('mix-name').onkeydown=nameKey;
 $('mix-name').onblur=e=>rename('mix',mix,e.target.value);
-$('strips').addEventListener('click',e=>{const ref=e.target.closest('[data-ref-reset]');if(ref){if(!replacing){editRevision++;action('/api/reset-peakref',{mix:Number(ref.dataset.refMix),source:Number(ref.dataset.refReset)},'Превышение порога сброшено')}return}const remove=e.target.closest('[data-remove]');if(remove){surfaceAction('/api/virtual',{mix,index:Number(remove.dataset.remove),visible:false},'Канал скрыт; уровень, mute и панорамы сброшены');return}const button=e.target.closest('[data-mute]');if(replacing||!button)return;const i=Number(button.dataset.mute);change(i,'mute',!state.mixes[mix].strips[i].mute);button.setAttribute('aria-pressed',state.mixes[mix].strips[i].mute);sendMixer()});
+$('strips').addEventListener('click',e=>{const solo=e.target.closest('[data-solo]'),master=e.target.closest('[data-master]');if(solo||master){if(replacing)return;const source=solo?Number(solo.dataset.solo):'master';const key=solo?'solo':master.dataset.master;const target=solo?state.mixes[mix].strips[source]:state.mixes[mix];change(source,key,!target[key]);(solo||master).setAttribute('aria-pressed',target[key]);sendMixer();return}const ref=e.target.closest('[data-ref-reset]');if(ref){if(!replacing){editRevision++;action('/api/reset-peakref',{mix:Number(ref.dataset.refMix),source:Number(ref.dataset.refReset)},'Превышение порога сброшено')}return}const remove=e.target.closest('[data-remove]');if(remove){surfaceAction('/api/virtual',{mix,index:Number(remove.dataset.remove),visible:false},'Канал скрыт; уровень, mute и панорамы сброшены');return}const button=e.target.closest('[data-mute]');if(replacing||!button)return;const i=Number(button.dataset.mute);change(i,'mute',!state.mixes[mix].strips[i].mute);button.setAttribute('aria-pressed',state.mixes[mix].strips[i].mute);sendMixer()});
 document.querySelectorAll('[data-mix]').forEach(b=>b.addEventListener('click',()=>{if(timer)sendMixer();flushReferenceDrafts();mix=Number(b.dataset.mix);render()}));
 $('save').onclick=()=>{if(timer)sendMixer();flushReferenceDrafts();action('/api/save',{},'Микс сохранён')};$('load').onclick=()=>replaceMixer('/api/load','Сохранённый микс загружен');$('factory').onclick=()=>replaceMixer('/api/factory','Восстановлены заводские маршруты');$('reset-meters').onclick=()=>{editRevision++;return action('/api/reset-meters',{},'Пики сброшены')};$('route').onclick=()=>action('/api/routes',{enabled:!routeSelected(),port:data.hardware?.port||data.route_port||$('device-port').value},routeSelected()?'Карта отключена от микшера':'Карта подключена');[1,2].forEach(i=>$('inst'+i).onclick=()=>action('/api/inst',{channel:i,enabled:!data.device.status.switches['inst'+i]},'INST '+i+' обновлён'));
 
@@ -264,8 +268,8 @@ $('mfp-file').onchange=()=>renderStatus();
 $('import-mfp').onclick=()=>{
   const file=$('mfp-file').files?.[0];
   if(!file||replacing)return;
-  if(file.size>32768){error('Пресет больше 32 КиБ');return}
-  replaceMixer('/api/import-mfp','Пресет .mfp применён. Сохрани микс, чтобы оставить его после перезапуска.',async()=>({text:await file.text()}));
+  if(file.size>65536){error('Пресет больше 64 КиБ');return}
+  file.text().then(text=>replaceMixer(text.trimStart().startsWith('{')?'/api/import-native':'/api/import-mfp','Пресет применён.',{text})).catch(e=>error(e.message));
 };
 $('export-mfp').onclick=()=>{
   if(replacing||!data?.preset?.has_template)return;
@@ -274,6 +278,18 @@ $('export-mfp').onclick=()=>{
   action('/api/export-mfp',{},'Пресет .mfp подготовлен к скачиванию',result=>{
     const url=URL.createObjectURL(new Blob([result.text],{type:'application/octet-stream'}));
     const link=document.createElement('a');link.href=url;link.download='MiniFuse2.mfp';link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+};
+
+$('undo').onclick=()=>{if(timer)sendMixer();flushReferenceDrafts();surfaceAction('/api/undo',{},'Изменение отменено')};
+$('redo').onclick=()=>{if(timer)sendMixer();flushReferenceDrafts();surfaceAction('/api/redo',{},'Изменение повторено')};
+$('export-native').onclick=()=>{
+  if(replacing)return;
+  if(timer)sendMixer();flushReferenceDrafts();
+  action('/api/export-native',{},'Linux-пресет подготовлен',result=>{
+    const url=URL.createObjectURL(new Blob([result.text],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download='MiniFuse2.json';link.click();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
 };
