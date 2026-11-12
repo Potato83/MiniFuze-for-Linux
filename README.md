@@ -18,7 +18,7 @@ and future kernels require testing. This is not an Arturia product.
 The current desktop interface is in Russian. The new studio features have local
 software and isolated GTK coverage. Physical checks include loopback measurements,
 same-port USB reconnect, port changes with serial-based control selection,
-mixer recovery after a host PipeWire restart,
+mixer recovery after a host PipeWire restart and suspend/resume,
 headphone listening, microphone monitoring and a short
 Ardour 9.8 playback/recording session at 48 kHz. Broader hardware qualification
 remains pending; see [hardware acceptance](docs/hardware-validation.md) and
@@ -54,7 +54,7 @@ and MIDI enumeration are provided by Linux ALSA, not a replacement audio driver.
 
 | Target | Status |
 | --- | --- |
-| CachyOS, x86_64, kernel 7.3.1-1-cachyos, PipeWire 1.6.10, MiniFuse 2 firmware 1.5.0 | Candidate built and measured on one physical interface |
+| CachyOS, x86_64, kernel 7.3.1-1-cachyos, PipeWire 1.6.10/1.6.11, MiniFuse 2 firmware 1.5.0 | Candidate built and measured on one physical interface |
 | Ubuntu 24.04 | CI build, isolated software/GTK tests and kernel compilation passed; no physical MiniFuse qualification |
 | Other Linux distributions | Expected to work with the dependencies below, but hardware, installer and kernel-module behavior still need testing on each distribution |
 | Windows and macOS | Not supported |

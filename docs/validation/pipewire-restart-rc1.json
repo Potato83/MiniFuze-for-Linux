@@ -62,7 +62,15 @@
     "audio_engine_running_after_restart": false,
     "xruns_after_restart": 6,
     "automatic_reconnection": false,
-    "saved_session_retained": true
+    "saved_session_retained": true,
+    "followup_recovery": {
+      "action": "After the subsequent suspend/resume check, the test client was saved, closed through its normal Quit action and relaunched. Its three selected MiniFuse links were restored and the session saved again.",
+      "engine_running": true,
+      "session_stopped": true,
+      "three_selected_links_restored": true,
+      "xruns_in_new_ardour_process": 2,
+      "automatic_recovery": false
+    }
   },
   "limits": [
     "Audio was interrupted during the intentional host restart; this is not a seamless failover test.",

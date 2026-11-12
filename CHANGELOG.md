@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Keep the underlying MiniFuse control error when an ioctl fails, so an unavailable device is reported accurately.
+- Explain when saved serial selection has not yet been applied to the running control module, including checks before reloading it.
+- Record physical headphone/microphone/Ardour, USB port-change, host PipeWire restart and suspend/resume results with their limits in [hardware acceptance](docs/hardware-validation.md).
+
 ## 0.1.0-rc.1
 
 - Compact studio desktop with a dark default and light alternative; the master stays visible while channels scroll.
@@ -9,8 +15,9 @@
 - Owned-file application updates with rollback, a single VERSION source and a checked draft GitHub prerelease workflow.
 - DSP, installer and private-service regression checks plus an expanded 31-stage GTK integration check.
 
-New studio behavior has isolated software coverage. Physical acceptance of this
-candidate remains pending; the hardware support limits below still apply.
+The tag was published with isolated software and initial physical coverage.
+Further operator checks are recorded in [hardware acceptance](docs/hardware-validation.md);
+the remaining acceptance work is tracked in [TODO.md](TODO.md).
 
 ## 0.1.0-preview
 

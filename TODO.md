@@ -20,7 +20,7 @@
 - [x] Exercise Ardour 9.8 music playback, simultaneous microphone recording, saving and voice replay at 48 kHz.
 - [x] Confirm USB port changes retain audio/mix and, after applying serial selection, hardware controls/meters.
 - [x] Confirm mixer recovery after full host PipeWire restart; a JACK DAW may require audio-engine reconnection.
-- [ ] Confirm suspend/resume on hardware.
+- [x] Confirm mixer/control recovery after one suspend/resume cycle at 48 kHz.
 - [x] Publish the checked prerelease: [v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
 - [ ] Collect feedback before declaring a stable release.
 
@@ -36,8 +36,8 @@
 - [ ] MIDI DIN IN/OUT transfer using a real cable; enumeration is insufficient.
 - [ ] Firmware image validation, update protocol and interrupted-update recovery.
 - [ ] Complete Windows parity for unclassified preset fields and all modes.
-- [ ] C-service hotplug, suspend and long-session qualification beyond existing
-  tests of the earlier implementation.
+- [ ] Prolonged C-service operation, repeated suspend cycles and DAW recovery
+  beyond the short reconnect/restart/suspend checks already documented.
 - [ ] Real kernel-upgrade/DKMS test and other distributions/interfaces.
 - [ ] Physical input/plugin delay compensation and broader DAW/rate combinations.
 - [ ] Small-buffer 32/64 qualification, prolonged load and USB-hub fault cause.

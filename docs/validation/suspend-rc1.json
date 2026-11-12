@@ -1,0 +1,61 @@
+{
+  "candidate": "0.1.0-rc.1",
+  "date": "2026-11-12",
+  "kernel": "7.3.1-1-cachyos",
+  "pipewire": "1.6.11",
+  "control_module": "0.2.0",
+  "operation": "Operator manually suspended and woke the host with MiniFuse left connected; the observer only read state and kernel clocks.",
+  "recovery": {
+    "result": "pass",
+    "checks": {
+      "suspend_observed_via_kernel_clocks": true,
+      "graph_and_eight_endpoints_recovered": true,
+      "selected_device_preserved": true,
+      "mixer_preserved": true,
+      "dirty_flag_preserved": true,
+      "default_devices_preserved": true,
+      "forced_clock_settings_preserved": true,
+      "hardware_switches_preserved": true,
+      "engine_binary_preserved": true
+    },
+    "observed_sleep_seconds": 64.24,
+    "settled_seconds_after_observed_resume": 5.6,
+    "engine_pid_preserved": true,
+    "actual_rate_hz": 48000,
+    "manual_recovery_used": false,
+    "hardware_commands_replayed": false
+  },
+  "digital_signal": {
+    "name": "post_resume_stereo_digital_signal",
+    "result": "pass",
+    "duration_seconds": 1,
+    "sample_rate_hz": 48000,
+    "channels": [
+      {
+        "channel": 1,
+        "peak_dbfs": -24.032090771367592,
+        "rms_dbfs": -38.74931697232284,
+        "clipped_samples": 0
+      },
+      {
+        "channel": 2,
+        "peak_dbfs": -24.056829891260506,
+        "rms_dbfs": -38.5050652540513,
+        "clipped_samples": 0
+      }
+    ],
+    "endpoint": "minifuze2_loopback78",
+    "capture_exit_code": 1,
+    "complete_buffer_received": true,
+    "capture_stderr_empty": true
+  },
+  "listening_after_resume": "Operator confirmed clean music in both headphones.",
+  "limits": [
+    "One suspend/resume cycle on one MiniFuse at 48 kHz.",
+    "Settled time is measured from observer detection after resume, not a precise hardware wake latency.",
+    "The one-second complete digital capture establishes signal in both channels without clipping; pw-cat returned status 1 with empty stderr.",
+    "Ardour was already stopped by the preceding host PipeWire restart; DAW engine recovery is not covered.",
+    "This is not an endurance, reboot, kernel-upgrade or other-rate test.",
+    "Serials, personal paths, voice and music are omitted."
+  ]
+}

@@ -40,7 +40,9 @@ hardware control and clean headphone playback automatically, preserving mix,
 defaults and forced clock settings. The saved Ardour project remained open,
 but its JACK engine stopped and required reconnection. The restart adopted
 the host's already installed PipeWire 1.6.11 from a running 1.6.10 instance.
-Suspend recovery and long-session qualification remain pending.
+One operator-controlled suspend/resume cycle at 48 kHz also restored the mixer,
+hardware controls and meters with the same engine process, mix and system settings.
+Long-session, repeated-suspend and DAW recovery qualification remain pending.
 MIDI DIN transfer, firmware updates, small-buffer qualification and
 additional distribution/hardware combinations remain outside the supported claims.
 The separate kernel module remains version 0.2.0.
