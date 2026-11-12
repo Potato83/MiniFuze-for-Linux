@@ -51,3 +51,9 @@ The earlier host PipeWire restart needed a separate Ardour audio-engine reconnec
 
 Native Ubuntu/Arch/CachyOS packages and the draft asset audit are recorded
 separately in the [native package acceptance](native-packages-0.1.0.md).
+
+The later [final audio check](pre-release-0.1.0.json) on 7.3.4-1-cachyos passed
+headphone music and 15-second microphone recording/replay with operator listening
+confirmation. Installed binaries matched their manifest; one complete digital
+music buffer and the microphone file had no clipped samples. It did not repeat
+DAW, USB, suspend or package-migration acceptance.

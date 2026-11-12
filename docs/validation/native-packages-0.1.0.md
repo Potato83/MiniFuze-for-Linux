@@ -37,7 +37,9 @@ signing or physical qualification of other distributions.
 The physical CachyOS host retains its existing user-local application and manual
 DKMS installation. No native package was installed over them. The separate
 [kernel-upgrade observation](kernel-upgrade-0.1.0.json) checks the real boot into
-7.3.4-1-cachyos, control and the 48 kHz graph; listening/DAW acceptance on that
-kernel and a backed-up manual-to-package migration remain separate tasks.
+7.3.4-1-cachyos, control and the 48 kHz graph. A later
+[final audio check](pre-release-0.1.0.json) also passed headphone music and
+microphone recording/replay. A fresh DAW test and a backed-up manual-to-package
+migration remain separate tasks.
 
 User instructions and migration boundaries: [package guide](../packages.md).

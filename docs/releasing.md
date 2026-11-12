@@ -68,3 +68,14 @@ native package/source downloads and their checksums before publication.
 
 After release, package fixes need a new package release and review process;
 this one-time draft supplement workflow is not an automatic update repository.
+
+## Final draft check
+
+After physical listening/recording acceptance, push `release/final-check` or
+run the `Final release check` workflow. It first runs application/GTK/archive
+and kernel CI, then downloads all 18 existing draft assets, verifies all nine
+SHA256 sidecars and the original archive manifests, and refreshes the reviewed
+notes. It downloads the assets again and requires identical identities and
+bytes. This step never uploads/replaces assets or publishes the draft.
+The local equivalent, with authenticated `gh`, is
+`python3 tools/supplement_release.py --review`.

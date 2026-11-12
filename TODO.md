@@ -16,6 +16,7 @@
 - [x] Verify the real boot into 7.3.4-1-cachyos: DKMS, serial-selected control, meters and 48 kHz running graph.
 - [x] Build and verify native Ubuntu, Arch/CachyOS and optional DKMS packages; supplement and download-audit all 18 stable-draft assets.
 - [x] Pass 47 software tests and Ubuntu GTK/archive/kernel CI after native packaging additions.
+- [x] Final installed 0.1.0 check on 7.3.4: verified binaries, clean stereo music and 15-second microphone recording/replay, retained mix/defaults/clock.
 - [ ] Review and publish the stable draft when ready.
 
 ## Earlier candidate acceptance
@@ -62,7 +63,8 @@
 - [ ] Prolonged C-service operation, repeated suspend cycles and DAW recovery
   beyond the short reconnect/restart/suspend checks already documented.
 - [x] Boot an upgraded 7.3.4-1-cachyos kernel and check DKMS/control/48 kHz graph.
-- [ ] Listening/DAW acceptance after the kernel upgrade and other distributions/interfaces.
+- [x] Headphone music and microphone recording/replay after the kernel upgrade at 48 kHz Auto.
+- [ ] Fresh DAW acceptance after the kernel upgrade and other distributions/interfaces.
 - [ ] Physical input/plugin delay compensation and broader DAW/rate combinations.
 - [ ] Small-buffer 32/64 qualification, prolonged load and USB-hub fault cause.
 - [ ] Electrical calibration of +48V, levels and hardware meters.

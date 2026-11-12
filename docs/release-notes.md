@@ -78,11 +78,22 @@ checks and 40 complete one-second digital buffers with no clipping. The operator
 confirmed clean music. The test sampled audio periodically and restarted the
 file between passes; it does not claim gapless playback or zero xruns.
 
+The final installed-version check on **7.3.4-1-cachyos** verified both 0.1.0
+executables against their installation manifest. A complete one-second digital
+monitor buffer contained stereo music without clipping. The 15-second microphone
+file contained exactly 720,000 stereo 24-bit frames at 48 kHz, with no clipped
+samples. Input 1 peaked at −0.19 dBFS; slightly lower hardware gain is recommended
+for more headroom. The operator confirmed clean music and recorded voice in both
+headphones. Mix, selected card, engine process, default devices and clock settings
+were retained. The operator enabled +48V before recording, and that setting was
+retained. No voice recording or personal data is included in this release. See the
+[final audio report](https://github.com/Potato83/MiniFuze-for-Linux/blob/main/docs/validation/pre-release-0.1.0.json).
+
 ## Known limits
 
 - Disconnecting USB or restarting PipeWire interrupts audio. Ardour's JACK engine needed reconnection after the host PipeWire restart; its saved project was retained.
 - Firmware updates and physical MIDI DIN transfer are not supported by this application.
-- Other sample rates, small buffers, repeated suspend and other distributions/devices still need physical qualification. After a real upgrade to kernel 7.3.4-1-cachyos, DKMS installation, serial-selected control, hardware meters and the running 48 kHz graph were checked; this was not a fresh listening/DAW test. Compiling a module for another kernel does not qualify operation on it.
+- Other sample rates, small buffers, repeated suspend and other distributions/devices still need physical qualification. After a real upgrade to kernel 7.3.4-1-cachyos, DKMS, serial-selected control and hardware meters were checked. Final headphone music playback and a 15-second XLR microphone recording/replay also passed at 48 kHz Auto; the operator confirmed clean stereo music and voice in both headphones. A new DAW session on that kernel remains untested. Compiling a module for another kernel does not qualify operation on it.
 - The desktop currently uses Russian. English translation, accessibility and broader HiDPI testing remain future work.
 - Linux presets retain Solo/Dim/master Mute; Windows `.mfp` export requires disabling those controls and an imported Windows template. Back up presets before returning to an older application: this release writes Linux document version 4.
 - Presets do not switch +48V/INST, select a device or change shared PipeWire rate/buffer settings. Manual clock changes affect the host and are refused while another physical audio device is active.

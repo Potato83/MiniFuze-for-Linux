@@ -1,0 +1,121 @@
+{
+  "name": "final_pre_release_audio_0_1_0",
+  "date": "2026-11-12",
+  "result": "pass_with_bounded_scope",
+  "application_version": "0.1.0",
+  "control_module_version": "0.2.0",
+  "platform": "CachyOS x86_64",
+  "running_kernel": "7.3.4-1-cachyos",
+  "pipewire_version": "1.6.11",
+  "device": "MiniFuse 2",
+  "firmware": "1.5.0",
+  "installed_files": {
+    "managed_files_verified": 5,
+    "installed_desktop_version": "0.1.0",
+    "installed_engine_version": "0.1.0",
+    "running_engine_matches_installed_binary": true
+  },
+  "music": {
+    "frames": 48000,
+    "channels_captured": 16,
+    "rate_hz": 48000,
+    "monitor_channels": [
+      {
+        "peak_dbfs": -24.14,
+        "rms_dbfs": -36.46,
+        "clipped_samples": 0,
+        "signal_present": true
+      },
+      {
+        "peak_dbfs": -24.13,
+        "rms_dbfs": -35.87,
+        "clipped_samples": 0,
+        "signal_present": true
+      }
+    ],
+    "capture_exit_code": 1,
+    "capture_stderr_empty": true,
+    "complete_finite_buffer": true,
+    "operator_clean_stereo_music": true,
+    "source_format": {
+      "codec": "FLAC",
+      "rate_hz": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    "target": "minifuze2_main",
+    "stream_volume": 0.063,
+    "requested_playback_limit_seconds": 60
+  },
+  "microphone": {
+    "duration_seconds": 15.0,
+    "complete_frames": 720000,
+    "channels": 2,
+    "sample_rate_hz": 48000,
+    "bits": 24,
+    "channels_metrics": [
+      {
+        "peak_dbfs": -0.19,
+        "rms_dbfs": -28.59,
+        "clipped_samples": 0,
+        "samples_above_minus45_dbfs": 365204
+      },
+      {
+        "peak_dbfs": -92.76,
+        "rms_dbfs": -106.61,
+        "clipped_samples": 0,
+        "samples_above_minus45_dbfs": 0
+      }
+    ],
+    "input1_mono_extracted_without_sample_changes": true,
+    "brand": "Maono",
+    "model": "unknown",
+    "input": 1,
+    "connection": "XLR",
+    "target": "minifuze2_inputs12",
+    "operator_clean_voice_in_both_headphones": true,
+    "replay_exit_code": 0,
+    "replay_volume": 0.126
+  },
+  "preservation": {
+    "same_engine_process": true,
+    "mixer_unchanged": true,
+    "preset_unchanged": true,
+    "dirty_flag_unchanged": true,
+    "selected_device_unchanged": true,
+    "pre_recording_hardware_switches_preserved": true,
+    "control_ok": true,
+    "hardware_meters_active": true,
+    "graph_alive": true,
+    "rate_hz": 48000,
+    "requested_rate": 0,
+    "requested_quantum": 0,
+    "pcm": {
+      "playback": {
+        "rate": 48000,
+        "state": "RUNNING"
+      },
+      "capture": {
+        "rate": 48000,
+        "state": "RUNNING"
+      }
+    },
+    "settings_metadata_unchanged": true,
+    "default_metadata_unchanged": true
+  },
+  "phantom_power": {
+    "initial_snapshot": false,
+    "operator_enabled_before_recording": true,
+    "immediate_pre_recording_state": true,
+    "final_state": true,
+    "preserved_immediate_pre_recording_state": true
+  },
+  "limits": [
+    "Short playback and 15-second microphone check on one physical interface at 48 kHz Auto.",
+    "A complete one-second digital monitor buffer was sampled; this is not continuous analog monitoring or a claim of zero xruns.",
+    "No new DAW session, native-package migration, USB disconnect, suspend or host PipeWire restart was performed in this final check.",
+    "Input 1 peaked at -0.19 dBFS without clipped samples; lowering hardware GAIN 1 slightly is recommended for more headroom.",
+    "pw-cat 1.6.11 returned 1 with empty stderr at its sample limit; the recording header/payload and finite monitor buffer were independently validated.",
+    "Voice recordings and music remain private and are excluded from Git and release assets."
+  ]
+}

@@ -72,10 +72,10 @@ alone would not make the application work on another operating system. The
 source can be rebuilt for another Linux distribution; the included binaries
 are specific to the Linux system where they were built.
 
-After a real kernel upgrade to **7.3.4-1-cachyos**, DKMS, the control endpoint,
-hardware meters and the running 48 kHz graph were checked separately;
-this does not repeat the earlier listening/DAW qualification.
-See the [redacted result](docs/validation/kernel-upgrade-0.1.0.json).
+After a real kernel upgrade to **7.3.4-1-cachyos**, DKMS, hardware controls
+and meters were checked, followed by clean headphone music and a 15-second
+microphone recording/replay at 48 kHz Auto. A fresh DAW test remains pending.
+See the [final redacted report](docs/validation/pre-release-0.1.0.json).
 
 ## Build
 
