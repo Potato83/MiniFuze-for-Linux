@@ -17,7 +17,8 @@
 - [x] Build and verify native Ubuntu, Arch/CachyOS and optional DKMS packages; supplement and download-audit all 18 stable-draft assets.
 - [x] Pass 47 software tests and Ubuntu GTK/archive/kernel CI after native packaging additions.
 - [x] Final installed 0.1.0 check on 7.3.4: verified binaries, clean stereo music and 15-second microphone recording/replay, retained mix/defaults/clock.
-- [ ] Review and publish the stable draft when ready.
+- [x] Final draft review: all 18 existing assets and 9 SHA256 sidecars, original archive manifests and notes verified without replacing assets.
+- [ ] Publish the stable draft when ready.
 
 ## Earlier candidate acceptance
 

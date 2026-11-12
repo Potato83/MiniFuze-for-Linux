@@ -57,3 +57,7 @@ headphone music and 15-second microphone recording/replay with operator listenin
 confirmation. Installed binaries matched their manifest; one complete digital
 music buffer and the microphone file had no clipped samples. It did not repeat
 DAW, USB, suspend or package-migration acceptance.
+
+The final [release check](final-release-check-0.1.0.md) combines this acceptance
+with the completed 49-test software/31-stage GTK run and a fresh GitHub draft
+download audit. Publication remains a separate action.
