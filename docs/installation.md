@@ -56,6 +56,25 @@ a dedicated `minifuze2ctl` group containing the selected desktop user.
 It does not unload a running module or restart audio. Group access applies
 to a fresh login; the current endpoint owner is retained.
 
+If an older module was loaded with `device_path`, writing `device_serial`
+to the modprobe configuration does not change that running instance. Audio
+can recover in a new USB port while hardware buttons and hardware input meters
+remain unavailable. The installer reports when the loaded selection differs.
+Apply the saved selection on a later boot, or reload only `minifuze2_ctl` after
+checking that a compatible module is available for the **running** kernel:
+
+```sh
+modinfo -k "$(uname -r)" -n minifuze2_ctl
+```
+
+Keep the current module loaded if this check fails. After a kernel package
+upgrade, DKMS may have modules for the new kernel but not the old kernel still
+running in memory. Boot a kernel with an installed module, or prepare a matching
+module before attempting a reload. Reloading the control module does not require
+reloading `snd_usb_audio` or restarting PipeWire. Device recreation also reapplies
+the udev group rule; a session started before group membership was added may need
+a fresh login to retain access.
+
 On an existing 0.2.0 installation, no kernel replacement is needed for this
 desktop. Do not run the fresh installer over it.
 

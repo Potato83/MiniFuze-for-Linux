@@ -1,6 +1,8 @@
 """Black-box checks against retained numeric references; standard library only."""
 import copy
+import errno
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -22,6 +24,13 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(len(row), len(reference))
             for value, target in zip(row, reference):
                 self.assertAlmostEqual(value, target, delta=tolerance)
+
+    def test_control_endpoint_preserves_ioctl_error(self):
+        run = subprocess.run([str(BIN), 'status', '--ctl', '/dev/null'],
+                             capture_output=True, timeout=5)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn(b'MiniFuse ioctl: ', run.stderr)
+        self.assertIn(os.strerror(errno.ENOTTY).encode(), run.stderr)
 
     def test_matrices_match_retained_vectors(self):
         with tempfile.TemporaryDirectory() as temp:

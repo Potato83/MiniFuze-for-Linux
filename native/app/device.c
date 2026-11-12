@@ -43,8 +43,12 @@ static int open_device(const char *path, struct mf2_info *info) {
     return fail("Expected MiniFuse character device");
   }
   memset(info, 0, sizeof *info);
-  if (request(fd, MF2_GET_INFO, info) || info->vid != 0x1c75 ||
-      info->pid != 0xaf90 || !memchr(info->port, 0, sizeof info->port)) {
+  if (request(fd, MF2_GET_INFO, info)) {
+    close(fd);
+    return -1;
+  }
+  if (info->vid != 0x1c75 || info->pid != 0xaf90 ||
+      !memchr(info->port, 0, sizeof info->port)) {
     close(fd);
     return fail("Endpoint is not a supported MiniFuse 2");
   }

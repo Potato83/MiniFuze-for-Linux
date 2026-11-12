@@ -17,7 +17,8 @@ CachyOS x86_64 and kernel 7.3.1-1-cachyos. Other distributions
 and future kernels require testing. This is not an Arturia product.
 The current desktop interface is in Russian. The new studio features have local
 software and isolated GTK coverage. Physical checks include loopback measurements,
-same-port USB reconnect, headphone listening, microphone monitoring and a short
+same-port USB reconnect, port changes with serial-based control selection,
+headphone listening, microphone monitoring and a short
 Ardour 9.8 playback/recording session at 48 kHz. Broader hardware qualification
 remains pending; see [hardware acceptance](docs/hardware-validation.md) and
 [release notes](docs/release-notes.md).

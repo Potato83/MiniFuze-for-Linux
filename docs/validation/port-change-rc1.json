@@ -1,0 +1,88 @@
+{
+  "candidate": "0.1.0-rc.1",
+  "date": "2026-11-12",
+  "kernel": "7.3.1-1-cachyos",
+  "control_module": "0.2.0",
+  "initial_move": {
+    "from": "3-3.1.2",
+    "to": "3-2.2",
+    "audio_recovered": true,
+    "same_device_identity": true,
+    "engine_pid_preserved": true,
+    "mixer_preserved": true,
+    "hardware_control_available": false,
+    "agent_observed_disconnection": false,
+    "cause": "The already running module still selected the previous device_path. Installing serial-based modprobe configuration had deliberately left that running module unchanged."
+  },
+  "configuration_repair": {
+    "action": "Operator reloaded only minifuze2_ctl with the already configured device_serial; ALSA, PipeWire and the mixer service were not restarted.",
+    "matching_module_checked": true,
+    "serial_matches_selected_device": true,
+    "current_endpoint_owner_retained": true,
+    "audio_engine_restarted": false
+  },
+  "retest": {
+    "name": "installed_service_port_change",
+    "result": "pass",
+    "old_port": "3-2.2",
+    "new_port": "3-3.1.2",
+    "disconnection_observed": true,
+    "engine_pid_preserved": true,
+    "mixer_preserved": true,
+    "device_control_port_matches": true,
+    "hardware_meters_active": true,
+    "actual_rate_hz": 48000,
+    "default_devices_preserved": true,
+    "listening_after_reconnect": "Operator confirmed clean music in both headphones."
+  },
+  "ardour": {
+    "test_client_and_three_selected_links_preserved": true,
+    "xruns_at_end_of_prior_listening_check": 0,
+    "xruns_observed_after_initial_move": 4,
+    "xruns_in_three_post_retest_status_samples": [
+      5,
+      5,
+      5
+    ],
+    "post_retest_counter_unchanged": true
+  },
+  "hardware_after_retest": {
+    "phantom_48v": false,
+    "automatic_hardware_command_replay": false
+  },
+  "checks": [
+    {
+      "name": "same_unit_in_different_usb_port",
+      "result": "pass"
+    },
+    {
+      "name": "installed_engine_and_mix_retained",
+      "result": "pass"
+    },
+    {
+      "name": "hardware_control_and_meters_follow_serial",
+      "result": "pass"
+    },
+    {
+      "name": "clean_stereo_music_after_reconnect",
+      "result": "pass"
+    },
+    {
+      "name": "default_devices_and_forced_clock_settings_preserved",
+      "result": "pass"
+    }
+  ],
+  "source_followup": {
+    "control_errors": "Preserve the underlying ioctl error instead of masking it as an unsupported-device error.",
+    "installer": "Report when saved serial selection differs from the running module selection.",
+    "validation": "29 software tests passed, including a new real-character-device ioctl error regression; kernel installer bash syntax and Git whitespace checks passed.",
+    "deployed_during_retest": false
+  },
+  "limits": [
+    "The first move required a one-time control-module configuration reload; only the subsequent move with serial selection recovered control automatically.",
+    "USB disconnection interrupted the device; Ardour xrun counters increased between checks. This is not a claim of uninterrupted audio across disconnection.",
+    "The stable post-retest counter check spans only a few seconds, not endurance qualification.",
+    "No suspend/resume or full host PipeWire restart is covered.",
+    "Serial numbers, personal paths, music and voice are omitted."
+  ]
+}

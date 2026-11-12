@@ -32,7 +32,10 @@ checks covered headphone music playback, Main Mute/Dim/fader, XLR microphone
 capture with +48V, direct mono/stereo and software monitoring. A short Ardour 9.8
 session at 48 kHz also passed music playback, simultaneous microphone recording,
 session saving and recorded-voice playback; Ardour reported no xruns in that session.
-Suspend recovery, port changes and long-session qualification remain pending.
+USB port changes also recovered audio and mix; hardware controls/meters recovered
+automatically after applying serial selection to the running control module.
+See the hardware report for the initial configuration issue and retest.
+Suspend recovery and long-session qualification remain pending.
 MIDI DIN transfer, firmware updates, small-buffer qualification and
 additional distribution/hardware combinations remain outside the supported claims.
 The separate kernel module remains version 0.2.0.

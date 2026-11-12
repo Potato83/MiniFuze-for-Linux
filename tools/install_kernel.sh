@@ -59,5 +59,15 @@ printf 'options minifuze2_ctl device_serial=%s\n' "$serial" | install -o root -g
 printf 'minifuze2_ctl\n' | install -o root -g root -m 0644 /dev/stdin "$autoload_file"
 bash "$repo/tools/configure_control_access.sh" --user "$account"
 printf 'Installed. The current module was not unloaded or replaced in memory.\n'
+if [[ -d /sys/module/minifuze2_ctl ]]; then
+    loaded_serial=/sys/module/minifuze2_ctl/parameters/device_serial
+    if [[ -r $loaded_serial && $(cat "$loaded_serial") == "$serial" ]]; then
+        printf 'The running control module already selects this device by serial.\n'
+    else
+        printf 'Serial selection is saved for the next module load; the running selection differs.\n'
+        printf 'Hardware controls will not follow this device across USB ports until the control module is reloaded or the system is rebooted.\n'
+        printf 'See docs/installation.md before reloading; the installer does not reload a running module.\n'
+    fi
+fi
 dkms status -m "$package" -v "$version"
 modinfo -n minifuze2_ctl
