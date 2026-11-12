@@ -1,6 +1,7 @@
 """The one-time native supplement may only mutate the expected stable draft."""
 import hashlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -75,8 +76,9 @@ class ReleaseSupplementTests(unittest.TestCase):
                  patch.object(self.module.subprocess, 'check_output', return_value=self.module.SOURCE), \
                  patch.object(self.module.subprocess, 'run') as mutate, \
                  patch.object(self.module, 'draft', side_effect=[before]+[after]*18), \
-                 patch.object(self.module, 'download_hashes', side_effect=hashes):
+                 patch.object(self.module, 'download_hashes', side_effect=hashes), \
+                 patch('sys.stdout', new_callable=io.StringIO):
                 self.module.main()
                 self.assertEqual(mutate.call_count, 15)  # 14 native uploads + notes.
-                self.assertTrue(all(call.args[0][3] not in self.module.ORIGINAL
+                self.assertTrue(all(Path(call.args[0][4]).name not in self.module.ORIGINAL
                                     for call in mutate.call_args_list[:14]))

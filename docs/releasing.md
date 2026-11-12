@@ -45,8 +45,8 @@ archive manifests, versions and release-note heading before creating a release.
 - A version such as `0.1.0-rc.2` creates a public **prerelease**.
 - A version such as `0.1.0` creates a **draft stable release**, with its archives and notes ready for final review.
 
-For the stable release, inspect the draft in GitHub Releases, confirm the two
-archives and sidecars, then publish that draft. Until publication the previous
+For the stable release, inspect the draft in GitHub Releases, confirm the
+archive and native-package downloads with their sidecars, then publish that draft. Until publication the previous
 release remains the public download. Do not retarget a published tag or replace
 published archives; fix a discovered problem in a new version.
 
@@ -61,8 +61,8 @@ that tag or replace its original four archive/checksum assets.
 After package inspections and pacman private-root / Ubuntu runner transactions
 pass, `tools/supplement_release.py` requires the existing release to remain a
 stable **draft**, checks the original tag, adds only the expected native assets
-and updates draft notes. It audits all 18 assets and preserves the original
-archive asset records. It refuses to modify a published release. The workflow
+and updates draft notes. It downloads and checks all 18 assets and preserves the original
+archive asset identities and bytes. It refuses to modify a published release. The workflow
 does not publish the draft. Review its [package guide](packages.md), all seven
 native package/source downloads and their checksums before publication.
 

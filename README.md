@@ -72,6 +72,11 @@ alone would not make the application work on another operating system. The
 source can be rebuilt for another Linux distribution; the included binaries
 are specific to the Linux system where they were built.
 
+After a real kernel upgrade to **7.3.4-1-cachyos**, DKMS, the control endpoint,
+hardware meters and the running 48 kHz graph were checked separately;
+this does not repeat the earlier listening/DAW qualification.
+See the [redacted result](docs/validation/kernel-upgrade-0.1.0.json).
+
 ## Build
 
 Requires a C11 compiler, make, pkg-config, GTK **4.12+**, libsoup **3.0+**,

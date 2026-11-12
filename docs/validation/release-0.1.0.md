@@ -37,8 +37,17 @@ playback restarted between passes; exact source/capture clock alignment was not
 measured. This is periodic observation, not a continuous analog recording or a
 claim of zero xruns. Test playback was stopped when the observation ended.
 
+A later real boot into **7.3.4-1-cachyos** passed a bounded read-only
+[post-upgrade check](kernel-upgrade-0.1.0.json): DKMS 0.2.0 installed for the
+running kernel, matching vermagic, serial-selected control endpoint, matching
+control/audio ports, active hardware meters and a running 48 kHz playback/capture
+graph with rate/quantum Auto. No fresh listening or DAW test was performed on
+that kernel, and no native-package migration was performed on the physical host.
+
 Release scope excludes firmware writing, physical MIDI DIN qualification,
-small buffers and other rates, electrical calibration, repeated suspend and
-booting an updated kernel. Compiling a module for a newer kernel does not
-qualify its operation after a kernel upgrade. The earlier host PipeWire restart
-needed a separate Ardour audio-engine reconnection.
+small buffers and other rates, electrical calibration and repeated suspend.
+Compiling a module alone does not qualify operation after a kernel upgrade.
+The earlier host PipeWire restart needed a separate Ardour audio-engine reconnection.
+
+Native Ubuntu/Arch/CachyOS packages and the draft asset audit are recorded
+separately in the [native package acceptance](native-packages-0.1.0.md).

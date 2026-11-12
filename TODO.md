@@ -14,7 +14,8 @@
 - [x] Verify preparation source/platform archives and extracted-source build/install checks.
 - [x] Pass both Ubuntu CI jobs on the code preparation commit; repeat them for the release tag.
 - [x] Verify the real boot into 7.3.4-1-cachyos: DKMS, serial-selected control, meters and 48 kHz running graph.
-- [ ] Build and verify native Ubuntu, Arch/CachyOS and optional DKMS packages; supplement the stable draft.
+- [x] Build and verify native Ubuntu, Arch/CachyOS and optional DKMS packages; supplement and download-audit all 18 stable-draft assets.
+- [x] Pass 47 software tests and Ubuntu GTK/archive/kernel CI after native packaging additions.
 - [ ] Review and publish the stable draft when ready.
 
 ## Earlier candidate acceptance

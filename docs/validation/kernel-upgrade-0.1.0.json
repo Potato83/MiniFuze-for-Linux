@@ -1,0 +1,37 @@
+{
+  "name": "post_kernel_upgrade_0_1_0",
+  "date": "2026-11-12",
+  "result": "pass_with_bounded_scope",
+  "platform": "CachyOS x86_64",
+  "running_kernel": "7.3.4-1-cachyos",
+  "application_version": "0.1.0",
+  "control_module_version": "0.2.0",
+  "dkms_installed_for_running_kernel": true,
+  "module_vermagic_matches": true,
+  "service_active": true,
+  "graph_alive": true,
+  "control_endpoint_ok": true,
+  "serial_selection_matches_connected_device": true,
+  "hardware_and_audio_port_match": true,
+  "hardware_meters_active": true,
+  "actual_rate_hz": 48000,
+  "requested_rate_hz": 0,
+  "requested_quantum": 0,
+  "pcm": {
+    "playback": {
+      "rate": 48000,
+      "state": "RUNNING"
+    },
+    "capture": {
+      "rate": 48000,
+      "state": "RUNNING"
+    }
+  },
+  "phantom48v": false,
+  "limits": [
+    "Read-only observation after the operator updated and booted the kernel.",
+    "No fresh listening, analog signal measurement or DAW session was performed on the new kernel.",
+    "No audio service restart, control module reload, hardware switch or native-package migration was performed by this check.",
+    "One physical device; this does not qualify other kernels or distributions."
+  ]
+}
