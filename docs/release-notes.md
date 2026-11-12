@@ -27,7 +27,12 @@ This candidate has local automated software and isolated GTK coverage, plus a
 48 kHz OUTPUT L → INPUT 2 measurement on MiniFuse 2 firmware 1.5.0. Gain, pan,
 Solo, Dim, Mute, presets, engine restart, owned-link repair and same-port USB
 reconnect passed. Hardware switch readback and an actual user-service update
-also passed; +48V was left off. Listening and ordinary DAW acceptance remain.
+also passed; +48V was left off during those automated checks. Subsequent operator
+checks covered headphone music playback, Main Mute/Dim/fader, XLR microphone
+capture with +48V, direct mono/stereo and software monitoring. A short Ardour 9.8
+session at 48 kHz also passed music playback, simultaneous microphone recording,
+session saving and recorded-voice playback; Ardour reported no xruns in that session.
+Suspend recovery, port changes and long-session qualification remain pending.
 MIDI DIN transfer, firmware updates, small-buffer qualification and
 additional distribution/hardware combinations remain outside the supported claims.
 The separate kernel module remains version 0.2.0.

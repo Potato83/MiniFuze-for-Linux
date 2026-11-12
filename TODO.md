@@ -12,7 +12,12 @@
 - [x] Exercise software controls/presets and hardware switch readback on MiniFuse 2.
 - [x] Confirm same-port USB unplug/replug, owned-link repair and engine restart.
 - [x] Verify a fresh installation and active user-service update on CachyOS.
-- [ ] Listen through monitors/headphones and exercise ordinary DAW playback/recording.
+- [x] Listen to stereo music through MiniFuse headphones at 48 kHz (short operator check).
+- [x] Confirm Main Mute, Dim and the Main fader by listening to music.
+- [x] Record and replay an XLR microphone with +48V; confirm software monitoring through headphones.
+- [x] Confirm that Direct Mono routes Input 1 to both headphones with MIX toward INPUT.
+- [x] Confirm that direct stereo monitoring routes Input 1 to the left headphone.
+- [x] Exercise Ardour 9.8 music playback, simultaneous microphone recording, saving and voice replay at 48 kHz.
 - [ ] Confirm port changes, suspend/resume and full host PipeWire restart on hardware.
 - [x] Publish the checked prerelease: [v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
 - [ ] Collect feedback before declaring a stable release.

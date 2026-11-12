@@ -1,0 +1,55 @@
+{
+  "candidate": "0.1.0-rc.1",
+  "date": "2026-11-12",
+  "device": "MiniFuse 2",
+  "environment": "CachyOS x86_64, kernel 7.3.1-1-cachyos",
+  "playback": {
+    "source_format": "FLAC",
+    "source_channels": 2,
+    "source_bits": 16,
+    "source_rate_hz": 44100,
+    "device_rate_hz": 48000,
+    "target": "minifuze2_main",
+    "stream_volume": 0.063,
+    "rate_setting": "Auto",
+    "quantum_setting": "Auto"
+  },
+  "setup": {
+    "output": "MiniFuse PHONES",
+    "mix_knob": "USB",
+    "analog_jumper_connected": false,
+    "analog_input_strips_muted": true,
+    "phantom_48v": false
+  },
+  "checks": [
+    {
+      "name": "headphone_music_playback",
+      "result": "pass",
+      "method": "Operator listened to music and confirmed both channels sounded clean, without crackling or interruptions."
+    },
+    {
+      "name": "main_strip_mute",
+      "result": "pass",
+      "method": "Operator confirmed Main Mute silenced the music and disabling Mute restored it."
+    },
+    {
+      "name": "master_dim",
+      "result": "pass",
+      "method": "Operator confirmed Dim noticeably reduced music loudness and disabling Dim restored it; no new attenuation measurement."
+    },
+    {
+      "name": "main_strip_fader",
+      "result": "pass",
+      "method": "Operator confirmed Main fader controlled music loudness and returned it to 0 dB."
+    }
+  ],
+  "limits": [
+    "Subjective short listening check; no dropout count or endurance measurement.",
+    "The 44.1 kHz source played on a 48 kHz device; this does not qualify native 44.1 kHz operation.",
+    "This report covers music listening and the three listed controls; microphone and Ardour checks are documented separately."
+  ],
+  "related_reports": [
+    "microphone-rc1.json",
+    "ardour-listening-rc1.json"
+  ]
+}

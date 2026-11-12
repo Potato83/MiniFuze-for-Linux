@@ -1,0 +1,74 @@
+{
+  "candidate": "0.1.0-rc.1",
+  "date": "2026-11-12",
+  "device": "MiniFuse 2",
+  "daw": "Ardour 9.8.0",
+  "runtime": "Private PipeWire JACK 1.6.11 library from a verified Arch Linux package.",
+  "gui_session": true,
+  "rate_hz": 48000,
+  "requested_jack_latency": "512/48000",
+  "forced_rate_changed": false,
+  "forced_quantum_changed": false,
+  "default_devices_changed": false,
+  "music_import": {
+    "source_format": "FLAC stereo, 16-bit, 44100 Hz",
+    "converted_by": "Ardour standard import with SrcBest",
+    "session_rate_hz": 48000,
+    "duration_seconds": 184.2,
+    "channels": 2
+  },
+  "routes": {
+    "playback": "Ardour Master stereo -> minifuze2_main",
+    "capture": "minifuze2_inputs12 FL -> Ardour mono Microphone track",
+    "microphone_monitoring": "MonitorDisk; microphone was recorded while music played.",
+    "software_input_strip_muted": true,
+    "mix_knob": "USB",
+    "phantom_48v": true
+  },
+  "recording": {
+    "sample_rate_hz": 48000,
+    "channels": 1,
+    "frames": 725488,
+    "duration_seconds": 15.114333333333333,
+    "peak_dbfs": -1.85,
+    "rms_dbfs": -29.44,
+    "clipped_samples": 0,
+    "region_channels": 1,
+    "captured_nonzero": true
+  },
+  "ardour_reported_xruns": 0,
+  "checks": [
+    {
+      "name": "ardour_music_playback",
+      "result": "pass",
+      "method": "Operator confirmed clean stereo music playback through MiniFuse headphones."
+    },
+    {
+      "name": "ardour_duplex_recording",
+      "result": "pass",
+      "method": "Ardour recorded approximately 15 seconds from Input 1 while playing music. The operator confirmed speaking; the saved mono file contained nonzero audio with no clipped samples."
+    },
+    {
+      "name": "ardour_voice_replay",
+      "result": "pass",
+      "method": "The operator soloed the recorded Microphone track and confirmed clean voice playback in both headphones inside Ardour."
+    },
+    {
+      "name": "ardour_session_saved",
+      "result": "pass",
+      "method": "The saved session contained one imported stereo music region and one recorded mono microphone region."
+    },
+    {
+      "name": "system_audio_settings_preserved",
+      "result": "pass",
+      "method": "Default source/sink and forced PipeWire rate/quantum matched their initial values."
+    }
+  ],
+  "pending": [],
+  "limits": [
+    "One short session at 48 kHz; no endurance, small-buffer, plugin-load or other-rate qualification.",
+    "Xrun count is Ardour telemetry, not an independent count of audible dropouts.",
+    "Audio sources and session files remain private and are not included in the repository."
+  ],
+  "preparation_note": "During automated session preparation, ImportToTrack with no selected track triggered an Ardour assertion. The session was reopened and the ordinary ImportAsTrack path succeeded. This is outside the MiniFuse mixer."
+}

@@ -1,0 +1,108 @@
+{
+  "candidate": "0.1.0-rc.1",
+  "date": "2026-11-12",
+  "device": "MiniFuse 2",
+  "microphone": {
+    "brand": "Maono",
+    "model": "unknown",
+    "connection": "XLR",
+    "input": 1,
+    "phantom_48v": true,
+    "phantom_requirement_evidence": "Operator confirmed previous use with +48V.",
+    "inst1": false,
+    "analog_jumper_connected": false
+  },
+  "capture": {
+    "target": "minifuze2_inputs12",
+    "format": "PCM WAV",
+    "rate_hz": 48000,
+    "bits": 24,
+    "channels": 2,
+    "duration_seconds": 15.0,
+    "peak_dbfs": [
+      -9.56,
+      -91.28
+    ],
+    "rms_dbfs": [
+      -29.42,
+      -101.7
+    ],
+    "clipped_samples": [
+      0,
+      0
+    ],
+    "tool": "pw-cat 1.6.11",
+    "tool_exit_code": 1,
+    "validation": "WAV header and payload independently matched 720000 stereo frames at 24 bits/48000 Hz. Nonzero input signal and local playback were confirmed.",
+    "exit_code_note": "In pw-cat 1.6.11, reaching --sample-count quits the main loop without setting the drained flag; main returns 1 even for this complete recording.",
+    "exit_code_reference": "https://github.com/PipeWire/pipewire/blob/1.6.11/src/tools/pw-cat.c"
+  },
+  "replay": {
+    "target": "minifuze2_main",
+    "channel_selection": "Input 1 extracted as mono without altering PCM samples.",
+    "stream_volume": 0.126,
+    "player_exit_code": 0
+  },
+  "software_monitoring": {
+    "mix_knob": "USB",
+    "input1_level_db": -12.0,
+    "input1_pan": 0.5,
+    "probe_duration_seconds": 1,
+    "input1_peak_dbfs": -18.79,
+    "input1_clipped_samples": 0,
+    "expected_gain_per_side": [
+      0.17766804993152618,
+      0.17766804993152618
+    ],
+    "coefficient_reference": "Installed engine matrix command, including the existing gain quantization.",
+    "max_sample_error": 9.217107077574838e-10,
+    "max_channel_difference": 0.0,
+    "pass": true
+  },
+  "checks": [
+    {
+      "name": "phantom_48v_switch",
+      "result": "pass",
+      "method": "Application enabled +48V and read back the hardware switch; microphone signal appeared."
+    },
+    {
+      "name": "microphone_capture",
+      "result": "pass",
+      "method": "Recorded 15 seconds from the exposed stereo input source; the voice was on Input 1 and neither recorded channel clipped."
+    },
+    {
+      "name": "microphone_replay",
+      "result": "pass",
+      "method": "Operator confirmed the recorded voice sounded clean in both headphones."
+    },
+    {
+      "name": "software_monitoring",
+      "result": "pass",
+      "method": "Operator reported latency was almost unnoticeable; a separate digital probe confirmed equal left/right signals with the configured gain."
+    },
+    {
+      "name": "direct_monitoring_mono",
+      "result": "pass",
+      "method": "With MIX fully toward INPUT and Direct Mono enabled, the operator confirmed the microphone was audible in both headphones."
+    },
+    {
+      "name": "direct_monitoring_stereo",
+      "result": "pass",
+      "method": "With MIX fully toward INPUT and Direct Mono disabled, the operator confirmed Input 1 was audible only in the left headphone."
+    }
+  ],
+  "limits": [
+    "One earlier monitoring probe briefly reached 0 dBFS at the input; the operator was asked to lower GAIN 1. The retained 15-second recording and final one-second software probe did not clip.",
+    "No quantitative input-to-output latency measurement, long-session or dropout qualification.",
+    "The +48V voltage and microphone electrical characteristics were not measured.",
+    "Voice recordings remain in a private local session directory and are not part of this repository."
+  ],
+  "direct_monitoring": {
+    "mix_knob": "INPUT",
+    "mono_enabled": true,
+    "operator_observation": "Microphone on Input 1 was audible in both headphones.",
+    "electrical_latency_measured": false,
+    "stereo_mode": "Operator confirmed Input 1 was audible only in the left headphone after Direct Mono was disabled."
+  },
+  "related_daw_report": "ardour-listening-rc1.json"
+}

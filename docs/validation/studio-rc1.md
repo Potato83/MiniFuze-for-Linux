@@ -25,8 +25,11 @@ the real application without a physical MiniFuse connection.
 
 Additional physical loopback, same-port USB reconnect, switch readback and
 real user-service update results are documented in
-[hardware acceptance](../hardware-validation.md). Listening, DAW use,
-suspend recovery and broader configurations remain outside these checks.
+[hardware acceptance](../hardware-validation.md). Subsequent operator checks
+also covered headphone music playback, microphone recording, direct/software
+monitoring and a short Ardour 9.8 playback/recording session at 48 kHz; these
+are separate from the isolated software checks above. Suspend recovery,
+endurance and broader configurations still require qualification.
 Ubuntu 24.04 application build, 28 tests, isolated GTK and source-archive
 round-trip, plus the separate kernel compilation job, passed in
 [GitHub Actions](https://github.com/Potato83/MiniFuze-for-Linux/actions/runs/43045195308).
