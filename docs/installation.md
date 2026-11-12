@@ -2,6 +2,19 @@
 
 ## Application
 
+The Ubuntu 24.04 x86_64 archive contains built executables. Install its runtime
+dependencies first:
+
+```sh
+sudo apt install libgtk-4-1 libsoup-3.0-0 libjson-c5 libmicrohttpd12t64 libssl3t64 pipewire-bin wireplumber
+```
+
+Download the archive and its `.sha256` sidecar together, verify with
+`sha256sum -c ARCHIVE.tar.gz.sha256`, extract, and run `sha256sum -c SHA256SUMS`
+inside the extracted directory. The binaries are linked for Ubuntu 24.04;
+rebuild the source on another distribution. The Russian first-run guide is
+[here](quickstart.ru.md).
+
 Build with `make`, then run `bash tools/install_desktop.sh` as the desktop user.
 It creates `~/.local/bin/minifuze2`, `~/.local/bin/minifuze2-engine`, a scalable
 icon, `io.github.minifuze2.Control.desktop`, and a file manifest under

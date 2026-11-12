@@ -1,53 +1,66 @@
-# MiniFuse 2 for Linux 0.1.0-rc.1
+# MiniFuse 2 for Linux 0.1.0
 
-This release candidate adds a compact studio mixer and independent Linux presets.
+An independent Linux mixer and control panel for **Arturia MiniFuse 2**. This
+release brings the compact GTK desktop, software mixing and tested hardware
+controls together in an installable application.
 
-- Graphite desktop by default, with a light studio theme in Settings. Existing theme preferences are retained.
-- Master channel stays visible while source channels scroll. Hardware switches are in the bottom bar; device selection and loopback settings are in the Device menu.
-- Solo per source, master Mute and Dim (−20 dB), precise numeric gain entry, and double-click reset for faders and pan.
-- Undo/Redo for the last 32 software changes, Ctrl+Z / Ctrl+Shift+Z, Ctrl+S and Ctrl+O.
-- Names, input Link and virtual-channel visibility work immediately without a Windows preset.
-- Open/save portable Linux `.json` presets, including all three mixes and presentation. Versions 1–3 of the earlier state files remain readable.
-- A mixer draft survives reconnection to the service. Hardware commands are not replayed after a connection failure.
-- `bash tools/install_desktop.sh --update` updates owned files, keeps settings and restores previous files if updating fails.
+- Compact dark mixer with an optional light theme and a master strip that stays visible.
+- Three stereo mixes, source gain/pan/Mute/Solo, master Mute and Dim (−20 dB).
+- Numeric level entry, double-click reset and 32-step Undo/Redo.
+- Portable Linux presets, working-mix recovery, names, input Link and channel visibility.
+- Four stereo playback endpoints and four recording endpoints in PipeWire.
+- INST 1/2, shared +48V, Direct Mono, hardware loopback controls and input meters through the separate control module.
+- Owned-file installation and update with rollback. Closing the window keeps the audio service running.
+- Clearer control-device errors and installation guidance for selecting a card across USB ports.
 
-Build from the source archive with the dependencies in README.md, or use the
-Ubuntu 24.04 x86_64 binary archive on that system. Its binaries link to Ubuntu's
-system libraries; it is not a universal Linux package. Run
-`bash tools/install_desktop.sh` without sudo. For an existing managed installation,
-close the window and use `--update`; an active owned mixer service briefly stops
-and restarts. Reopen the desktop afterwards.
+## Downloads and installation
 
-Solo, Dim and master Mute apply to the selected software mix. Mute takes priority
-over Solo. They are preserved in Linux presets. Turn them off before Windows
-`.mfp` export; export needs an imported Windows template to retain its unknown fields.
-Presets never switch +48V/INST or change the global sample rate and buffer.
+Use the **Ubuntu 24.04 x86_64** archive on Ubuntu 24.04, or build the source
+archive on another supported Linux setup. The binary archive uses system
+libraries; it is not a universal Linux package. Both archives include source,
+installation tools, licenses and a `BUILD-INFO.json` recording version and
+source commit. SHA256 sidecars and an internal file manifest accompany the files.
 
-This candidate has local automated software and isolated GTK coverage, plus a
-48 kHz OUTPUT L → INPUT 2 measurement on MiniFuse 2 firmware 1.5.0. Gain, pan,
-Solo, Dim, Mute, presets, engine restart, owned-link repair and same-port USB
-reconnect passed. Hardware switch readback and an actual user-service update
-also passed; +48V was left off during those automated checks. Subsequent operator
-checks covered headphone music playback, Main Mute/Dim/fader, XLR microphone
-capture with +48V, direct mono/stereo and software monitoring. A short Ardour 9.8
-session at 48 kHz also passed music playback, simultaneous microphone recording,
-session saving and recorded-voice playback; Ardour reported no xruns in that session.
-USB port changes also recovered audio and mix; hardware controls/meters recovered
-automatically after applying serial selection to the running control module.
-See the hardware report for the initial configuration issue and retest.
-An operator-approved host PipeWire restart also restored the mixer, endpoints,
-hardware control and clean headphone playback automatically, preserving mix,
-defaults and forced clock settings. The saved Ardour project remained open,
-but its JACK engine stopped and required reconnection. The restart adopted
-the host's already installed PipeWire 1.6.11 from a running 1.6.10 instance.
-One operator-controlled suspend/resume cycle at 48 kHz also restored the mixer,
-hardware controls and meters with the same engine process, mix and system settings.
-Long-session, repeated-suspend and DAW recovery qualification remain pending.
-MIDI DIN transfer, firmware updates, small-buffer qualification and
-additional distribution/hardware combinations remain outside the supported claims.
-The separate kernel module remains version 0.2.0.
-Detailed scope and numeric reports are in `docs/hardware-validation.md`.
+Verify the downloaded archive before extracting it:
 
-Verify archive hashes using the accompanying `.sha256` file. Source archives also
-include an internal SHA256SUMS manifest. The release workflow publishes a
-prerelease after both Ubuntu application tests and kernel compilation pass.
+```sh
+sha256sum -c minifuze2-0.1.0-ubuntu-24.04-x86_64.tar.gz.sha256
+tar -xzf minifuze2-0.1.0-ubuntu-24.04-x86_64.tar.gz
+cd minifuze2-0.1.0
+sha256sum -c SHA256SUMS
+bash tools/install_desktop.sh
+```
+
+Run the application installer as your desktop user. For an existing managed
+installation, close the window and use `bash tools/install_desktop.sh --update`.
+The mixer briefly restarts; presets and service settings are retained. Extra
+hardware controls need the separate **0.2.0** kernel module and matching kernel
+headers. See `docs/installation.md` and the Russian `docs/quickstart.ru.md`.
+
+## Tested scope
+
+Physical qualification uses one MiniFuse 2 with firmware **1.5.0**, CachyOS
+x86_64 and kernel **7.3.1-1-cachyos**. The qualified audio mode is **48 kHz
+with automatic rate/buffer settings**. Ubuntu 24.04 receives CI build, software,
+GTK, archive and kernel compilation checks; physical Ubuntu qualification is
+not available.
+
+Hardware evidence covers analog loopback, headphone playback, Main Mute/Dim,
+XLR microphone recording with +48V, direct mono/stereo and software monitoring,
+and an Ardour 9.8 playback/recording session. USB reconnect and port changes,
+installed service updates, host PipeWire restart and one suspend/resume cycle
+also recovered the mixer. The control module must already use serial selection
+for hardware controls to follow a USB-port change. Detailed results and their
+limits are in `docs/hardware-validation.md`.
+
+## Known limits
+
+- Disconnecting USB or restarting PipeWire interrupts audio. Ardour's JACK engine needed reconnection after the host PipeWire restart; its saved project was retained.
+- Firmware updates and physical MIDI DIN transfer are not supported by this application.
+- Other sample rates, small buffers, repeated suspend, booting an updated kernel and other distributions/devices still need physical qualification. Compiling a module for another kernel does not qualify operation on it.
+- The desktop currently uses Russian. English translation, accessibility and broader HiDPI testing remain future work.
+- Linux presets retain Solo/Dim/master Mute; Windows `.mfp` export requires disabling those controls and an imported Windows template. Back up presets before returning to an older application: this release writes Linux document version 4.
+- Presets do not switch +48V/INST, select a device or change shared PipeWire rate/buffer settings. Manual clock changes affect the host and are refused while another physical audio device is active.
+
+This project is independent of Arturia. The kernel control module is optional
+for standard ALSA audio and does not implement firmware writing.

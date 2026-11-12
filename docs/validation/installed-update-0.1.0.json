@@ -1,0 +1,26 @@
+{
+  "name": "release_0_1_0_installed_update",
+  "result": "pass",
+  "application_versions": {
+    "minifuze2": "0.1.0",
+    "minifuze2-engine": "0.1.0"
+  },
+  "mixer_preserved": true,
+  "dirty_flag_preserved": true,
+  "selected_device_preserved": true,
+  "hardware_switches_preserved": true,
+  "actual_rate_hz": 48000,
+  "desktop_reopened": true,
+  "control_module_reloaded": false,
+  "host_pipewire_restarted": false,
+  "candidate": "0.1.0",
+  "date": "2026-11-12",
+  "kernel": "7.3.1-1-cachyos",
+  "pipewire": "1.6.11",
+  "control_module": "0.2.0",
+  "limits": [
+    "One managed update on the tested CachyOS host; this does not qualify a fresh installation on every distribution.",
+    "No module reload, host PipeWire restart or firmware operation occurred.",
+    "Earlier candidate hardware reports remain separate from this installed 0.1.0 check."
+  ]
+}

@@ -1,6 +1,6 @@
 # Contributing
 
-This preview targets MiniFuse 2 on Linux. Read [TODO.md](TODO.md) before
+This application targets MiniFuse 2 on Linux. Read [TODO.md](TODO.md) before
 starting work: MIDI DIN transfer, firmware updates and electrical calibration
 are outside the current release claims.
 
@@ -40,11 +40,14 @@ change. Include relevant validation and remaining limits in a pull request.
 Run the build and checks above, check both GitHub Actions jobs after pushing,
 and complete the publication checklist in TODO.md. The workflow tests Ubuntu
 software behavior and module compilation; it does not qualify physical hardware.
-The application preview is 0.1.0-rc.1; the independent kernel module version
+The application version is 0.1.0; the independent kernel module version
 is 0.2.0. These version numbers describe different components.
 
 Only source files belong in Git. `build/`, `dist/` and machine-specific state
 are ignored. Generate a source archive with `bash tools/package_release.sh`
 only when an archive is needed. `--binary` includes executables linked against
 the build system's libraries and is not a universal Linux package. Archive
-generation does not publish a release.
+generation does not publish a release. Packaging uses Python 3's standard library
+and requires a clean Git checkout or a verified source archive. Only tracked
+sources are included; binary versions, source revision and manifests are checked.
+See [the release process](docs/releasing.md) for draft/publication behavior.

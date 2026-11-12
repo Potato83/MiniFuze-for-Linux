@@ -1,10 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.1.0
 
 - Keep the underlying MiniFuse control error when an ioctl fails, so an unavailable device is reported accurately.
 - Explain when saved serial selection has not yet been applied to the running control module, including checks before reloading it.
 - Record physical headphone/microphone/Ardour, USB port-change, host PipeWire restart and suspend/resume results with their limits in [hardware acceptance](docs/hardware-validation.md).
+- Package tracked sources only, record source revision in `BUILD-INFO.json`, normalize archive output and verify every archived file and executable version.
+- Prepare stable GitHub releases as reviewable drafts after CI; candidate tags remain prereleases. Upload review archives from branch builds too.
+- Add a Russian first-run guide, Ubuntu runtime dependencies and a bounded 48 kHz/Auto support claim.
 
 ## 0.1.0-rc.1
 

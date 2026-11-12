@@ -1,6 +1,21 @@
 # Release checklist and deferred work
 
-## 0.1.0-rc.1 release acceptance
+## 0.1.0 release preparation
+
+- [x] Set application version 0.1.0, align release notes and keep module version 0.2.0.
+- [x] Exclude untracked/private files, validate binary versions and verify archive provenance/manifests.
+- [x] Add deterministic source archives and checks for corruption, unsafe members, stale binaries and tag classification.
+- [x] Document first launch, Ubuntu runtime dependencies, update/rollback and known support boundaries.
+- [x] Prepare a stable-release draft workflow and branch-build review archives.
+- [x] Pass 37 software tests and 31 isolated GTK stages before final packaging checks.
+- [x] Compile the unchanged module for installed 6.18.60 LTS and 7.3.3 headers without loading it.
+- [x] Update the real managed installation to 0.1.0 while preserving mix, selection and hardware switches.
+- [ ] Finish a 20-minute installed 0.1.0 playback/state/signal observation.
+- [ ] Verify final source/platform archives and extracted-source build/install checks.
+- [ ] Pass both Ubuntu CI jobs on the final preparation commit.
+- [ ] Review and publish the stable draft when ready.
+
+## Earlier candidate acceptance
 
 - [x] Compact dark studio UI with a light alternative.
 - [x] Solo, master Mute/Dim, numeric gain, Undo/Redo and Linux preset files.
@@ -22,7 +37,7 @@
 - [x] Confirm mixer recovery after full host PipeWire restart; a JACK DAW may require audio-engine reconnection.
 - [x] Confirm mixer/control recovery after one suspend/resume cycle at 48 kHz.
 - [x] Publish the checked prerelease: [v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
-- [ ] Collect feedback before declaring a stable release.
+- [ ] Continue collecting user feedback after release.
 
 ## Next product improvements
 

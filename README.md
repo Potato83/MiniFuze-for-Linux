@@ -1,6 +1,6 @@
 # MiniFuse 2 for Linux
 
-[Download 0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1)
+[Releases and downloads](https://github.com/Potato83/MiniFuze-for-Linux/releases)
 — source and Ubuntu 24.04 x86_64 archives with SHA256 checksums.
 
 **I made in with AI, for my personal use at first**
@@ -12,9 +12,11 @@ the audio service running.
 
 [Инструкция по-русски](README.ru.md)
 
-**Status: 0.1.0-rc.1, release candidate.** Tested on one MiniFuse 2 with firmware 1.5.0,
+**Version: 0.1.0.** Tested on one MiniFuse 2 with firmware 1.5.0,
 CachyOS x86_64 and kernel 7.3.1-1-cachyos. Other distributions
 and future kernels require testing. This is not an Arturia product.
+The physically qualified audio mode is **48 kHz with automatic rate/buffer
+settings**. Other rates and small buffers remain unqualified.
 The current desktop interface is in Russian. The new studio features have local
 software and isolated GTK coverage. Physical checks include loopback measurements,
 same-port USB reconnect, port changes with serial-based control selection,
@@ -129,7 +131,7 @@ for the separate kernel-module setup and removal.
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for bug reports, validation and release
-preparation, and [CHANGELOG.md](CHANGELOG.md) for preview changes.
+preparation, and [CHANGELOG.md](CHANGELOG.md) for changes.
 
 ```sh
 make check
@@ -156,10 +158,13 @@ vectors and reversible Linux hardware experiments. Read the
 and limits of the results. This source tree excludes personal captures and
 machine-specific settings. See [NOTICE.md](NOTICE.md) for attribution and licenses.
 
-Local source archive: `bash tools/package_release.sh`. Add `--binary` to include
+Local source archive: `bash tools/package_release.sh` from a clean Git checkout.
+Packaging uses Python 3; the application does not. Add `--binary` to include
 the two executables built for the current Linux system. Archives carry checksums;
 their binaries use system libraries and are not universal Linux packages.
-Neither command publishes anything to GitHub.
+Neither command publishes anything to GitHub. Only tracked source files are
+included; `BUILD-INFO.json` records the source commit. Verify complete archives
+with `python3 tools/release.py verify dist/*.tar.gz`.
 
 Studio controls and file compatibility are described in [the desktop guide](docs/desktop-design.md).
 The candidate also passed a 48 kHz physical loopback, same-port USB reconnect
@@ -170,7 +175,8 @@ Linux presets include Solo/Dim/master Mute; Windows `.mfp` export requires turni
 these controls off and retaining an imported Windows template. Hardware switches,
 device selection and global rate/buffer settings are not included in exported presets.
 
-A `vVERSION` tag triggers the checked [release workflow](.github/workflows/release.yml).
-It publishes a **prerelease** with source and Ubuntu 24.04 x86_64 binary archives
-after application, isolated GTK and kernel build jobs pass. See [release notes](docs/release-notes.md)
-and the remaining acceptance work in [TODO.md](TODO.md) before declaring a stable release.
+A `vVERSION` tag triggers the checked [release workflow](.github/workflows/release.yml)
+after application, isolated GTK, archive and kernel build jobs pass. Candidate
+versions produce prereleases; stable versions produce a draft for final review.
+See [release notes](docs/release-notes.md), the [release process](docs/releasing.md)
+and remaining qualification in [TODO.md](TODO.md).
