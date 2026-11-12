@@ -1,0 +1,27 @@
+name: Final release check
+on:
+  push:
+    branches: [release/final-check]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: minifuze2-final-draft-review
+  cancel-in-progress: false
+jobs:
+  validate:
+    uses: ./.github/workflows/build.yml
+  review-draft:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify downloads and refresh reviewed draft notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/ci_native.sh python3 tools/supplement_release.py --review

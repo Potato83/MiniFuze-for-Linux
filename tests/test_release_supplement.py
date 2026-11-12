@@ -82,3 +82,29 @@ class ReleaseSupplementTests(unittest.TestCase):
                 self.assertEqual(mutate.call_count, 15)  # 14 native uploads + notes.
                 self.assertTrue(all(Path(call.args[0][4]).name not in self.module.ORIGINAL
                                     for call in mutate.call_args_list[:14]))
+
+    def test_final_review_rejects_published_release_without_mutation(self):
+        with patch.object(self.module.subprocess, 'check_output', return_value=self.module.SOURCE), \
+             patch.object(self.module, 'draft', side_effect=ValueError('Published release')), \
+             patch.object(self.module.subprocess, 'run') as mutate:
+            with self.assertRaises(ValueError):
+                self.module.review()
+            mutate.assert_not_called()
+
+    def test_final_review_only_updates_notes_and_keeps_every_download(self):
+        expected = self.module.ORIGINAL | self.module.NATIVE | {name+'.sha256' for name in self.module.NATIVE}
+        release = {'assets': [{'name': name, 'id': name, 'size': 5} for name in expected], 'url': 'draft'}
+        hashes = {name: 'verified' for name in expected}
+        outputs = [self.module.SOURCE, json.dumps({'body': (ROOT/'docs/release-notes.md').read_text()})]
+        with patch.object(self.module.subprocess, 'check_output', side_effect=outputs), \
+             patch.object(self.module, 'draft', return_value=release), \
+             patch.object(self.module, 'download_hashes', return_value=hashes) as download, \
+             patch.object(self.module.subprocess, 'run') as mutate, \
+             patch('sys.stdout', new_callable=io.StringIO):
+            self.module.review()
+            mutate.assert_called_once_with(['gh', 'release', 'edit', 'v0.1.0',
+                                            '--notes-file', 'docs/release-notes.md'], check=True)
+            self.assertEqual(download.call_count, 2)
+            for call in download.call_args_list:
+                self.assertEqual(call.args, (expected,))
+                self.assertEqual(call.kwargs, {'verify_sidecars': True})

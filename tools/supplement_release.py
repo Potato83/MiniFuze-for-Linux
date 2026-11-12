@@ -30,7 +30,7 @@ def draft():
     return release
 
 
-def download_hashes(names):
+def download_hashes(names, verify_sidecars=False):
     with tempfile.TemporaryDirectory(prefix='minifuze-release-audit-') as temporary:
         command = ['gh', 'release', 'download', TAG, '--dir', temporary]
         for name in sorted(names):
@@ -39,10 +39,59 @@ def download_hashes(names):
         files = {p.name: p for p in Path(temporary).iterdir() if p.is_file()}
         if files.keys() != names:
             raise ValueError('Incomplete release download')
-        return {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in files.items()}
+        hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in files.items()}
+        if verify_sidecars:
+            for name in names:
+                if not name.endswith('.sha256'):
+                    sidecar = files.get(name+'.sha256')
+                    if not sidecar or sidecar.read_text() != hashes[name]+'  '+name+'\n':
+                        raise ValueError('Invalid downloaded checksum: '+name)
+            subprocess.run([sys.executable, str(Path(__file__).with_name('release.py')),
+                            'verify', '--version', '0.1.0',
+                            str(files['minifuze2-0.1.0-source.tar.gz']),
+                            str(files['minifuze2-0.1.0-ubuntu-24.04-x86_64.tar.gz'])], check=True)
+        return hashes
+
+
+def review():
+    """Verify existing downloads and refresh notes without replacing any asset."""
+    revision = subprocess.check_output(['git', 'rev-parse', TAG+'^{commit}'], text=True).strip()
+    if revision != SOURCE:
+        raise ValueError('The original application tag must remain unchanged')
+    expected = ORIGINAL | NATIVE | {name+'.sha256' for name in NATIVE}
+    before = draft()
+    assets_before = {asset['name']: asset for asset in before['assets']}
+    if assets_before.keys() != expected:
+        raise ValueError('Unexpected final release asset set')
+    hashes_before = download_hashes(expected, verify_sidecars=True)
+    draft()
+    notes = Path('docs/release-notes.md')
+    if notes.read_text().splitlines()[0] != '# MiniFuse 2 for Linux 0.1.0':
+        raise ValueError('Release note version mismatch')
+    subprocess.run(['gh', 'release', 'edit', TAG, '--notes-file', str(notes)], check=True)
+    after = draft()
+    assets_after = {asset['name']: asset for asset in after['assets']}
+    if assets_after.keys() != expected:
+        raise ValueError('Final release asset set changed')
+    for name in expected:
+        if any(assets_before[name].get(key) != assets_after[name].get(key)
+               for key in ('id', 'apiUrl', 'size', 'createdAt', 'digest')):
+            raise ValueError('Final review changed asset identity: '+name)
+    if hashes_before != download_hashes(expected, verify_sidecars=True):
+        raise ValueError('Final review changed release bytes')
+    body = json.loads(subprocess.check_output([
+        'gh', 'release', 'view', TAG, '--json', 'body'], text=True))['body']
+    if body.rstrip() != notes.read_text().rstrip():
+        raise ValueError('Final draft notes do not match the reviewed file')
+    after = draft()
+    print('::notice title=Final release check passed::'+after['url'])
+    print('::notice::All 18 existing assets, 9 SHA256 sidecars, original archive manifests and final notes verified. No assets replaced; stable release remains a draft.')
 
 
 def main():
+    if sys.argv[1:] == ['--review']:
+        review()
+        return
     directory = Path(sys.argv[1])
     files = {p.name: p for p in directory.iterdir() if p.is_file()}
     expected = NATIVE | {name+'.sha256' for name in NATIVE}
