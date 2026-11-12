@@ -36,6 +36,8 @@ class NativePackagingTests(unittest.TestCase):
         self.assertTrue(all(name.startswith('usr/') for name in names))
         self.assertFalse(any('modules-load.d' in name or name.endswith('.ko') for name in names))
         self.assertEqual((dest/'usr/bin/minifuze2-ctl-setup').stat().st_mode & 0o777, 0o755)
+        config = (dest/'usr/src/minifuze2-ctl-0.2.0/dkms.conf').read_text()
+        self.assertIn('MAKE[0]="make KDIR=/lib/modules/${kernelver}/build"', config)
 
     def test_staging_refuses_nonempty_directory_and_mismatched_module_version(self):
         dest = self.work/'nonempty'

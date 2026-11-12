@@ -35,6 +35,7 @@ def inspect(root, component, payload_only=True):
     else:
         run('bash', '-n', root/'usr/bin/minifuze2-ctl-setup')
         assert (root/'usr/src/minifuze2-ctl-0.2.0/dkms.conf').is_file()
+        assert 'KDIR=/lib/modules/${kernelver}/build' in (root/'usr/src/minifuze2-ctl-0.2.0/dkms.conf').read_text()
         assert not (root/'usr/lib/modules-load.d').exists()
         assert (root/'usr/lib/sysusers.d/minifuze2ctl.conf').is_file()
 

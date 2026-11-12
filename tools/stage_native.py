@@ -41,6 +41,11 @@ def stage(source, assets, dest, component, metadata):
         for name in ('Makefile', 'dkms.conf', 'minifuze2_ctl.c',
                      'minifuze2_selection.h', 'minifuze2_uapi.h'):
             put(source/'kernel'/name, f'usr/src/minifuze2-ctl-{version}/'+name)
+        # Older DKMS defaults call `make` in the source tree. Select its target
+        # headers explicitly instead of accidentally building for uname -r.
+        dkms_config = dest/f'usr/src/minifuze2-ctl-{version}/dkms.conf'
+        with dkms_config.open('a') as handle:
+            handle.write('\nMAKE[0]="make KDIR=/lib/modules/${kernelver}/build"\n')
         put(assets/'70-minifuze2ctl.rules', 'usr/lib/udev/rules.d/70-minifuze2ctl.rules')
         put(assets/'minifuze2ctl.conf', 'usr/lib/sysusers.d/minifuze2ctl.conf')
         put(assets/'minifuze2-ctl-setup', 'usr/bin/minifuze2-ctl-setup', 0o755)

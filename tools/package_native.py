@@ -26,8 +26,13 @@ def digest(path):
 
 
 def metadata(platform):
-    revision = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
-    dirty = bool(subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain']))
+    archive_info = ROOT/'BUILD-INFO.json'
+    if archive_info.is_file():
+        revision = json.loads(archive_info.read_text())['source_revision']
+        dirty = True  # An extraction can be edited; do not certify a clean checkout.
+    else:
+        revision = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
+        dirty = bool(subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain']))
     return dict(UPSTREAM, packaging_revision=revision, packaging_dirty=dirty, platform=platform)
 
 

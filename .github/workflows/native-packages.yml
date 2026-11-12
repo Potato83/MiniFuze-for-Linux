@@ -31,8 +31,8 @@ jobs:
         run: |
           useradd --create-home builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
-          runuser -u builder -- python3 tools/package_native.py arch --platform "$NATIVE_PLATFORM"
-          runuser -u builder -- fakeroot python3 tools/test_native_packages.py arch dist/native
+          bash tools/ci_native.sh runuser -u builder -- python3 tools/package_native.py arch --platform "$NATIVE_PLATFORM"
+          bash tools/ci_native.sh runuser -u builder -- fakeroot python3 tools/test_native_packages.py arch dist/native
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.platform }}
@@ -49,10 +49,11 @@ jobs:
           sudo apt-get -o Acquire::ForceIPv4=true install -y dpkg-dev dkms linux-headers-generic
       - name: Build and inspect Debian packages
         run: |
-          python3 tools/package_native.py deb
-          python3 tools/test_native_packages.py deb dist/native
+          bash tools/ci_native.sh python3 tools/package_native.py deb
+          bash tools/ci_native.sh python3 tools/test_native_packages.py deb dist/native
       - name: Install, reinstall and remove on the disposable runner
         run: |
+          bash tools/ci_native.sh bash -euo pipefail <<'CHECK'
           sudo apt-get -o Acquire::ForceIPv4=true install -y ./dist/native/*.deb
           /usr/bin/minifuze2 --version
           /usr/bin/minifuze2-engine --version
@@ -71,6 +72,7 @@ jobs:
           test ! -e /usr/bin/minifuze2
           test ! -d /usr/src/minifuze2-ctl-0.2.0
           test -z "$(dkms status -m minifuze2-ctl)"
+          CHECK
       - uses: actions/upload-artifact@v4
         with:
           name: native-ubuntu
