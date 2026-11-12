@@ -100,4 +100,4 @@ jobs:
       - name: Add checked packages to the existing stable draft
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 tools/supplement_release.py dist/native
+        run: bash tools/ci_native.sh python3 tools/supplement_release.py dist/native
