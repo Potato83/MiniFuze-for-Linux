@@ -1,0 +1,16 @@
+[Unit]
+Description=MiniFuse 2 audio mixer and controls
+After=pipewire.service
+Requires=pipewire.service
+PartOf=pipewire.service
+
+[Service]
+Type=simple
+UMask=0077
+ExecStartPre=/usr/bin/mkdir -p "%S/minifuze2"
+ExecStart=/usr/bin/minifuze2-engine panel --prefix minifuze2 --state "%S/minifuze2/mixer.json" --session-state "%S/minifuze2/working.json" --ready-file "%S/minifuze2/ready.json" --http-port 39713 --ctl /dev/minifuze2ctl
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

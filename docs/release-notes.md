@@ -15,6 +15,26 @@ controls together in an installable application.
 
 ## Downloads and installation
 
+Native application packages are available for **Ubuntu 24.04 amd64**, **Arch Linux
+x86_64** and **CachyOS x86_64**. The optional **minifuze2-ctl-dkms 0.2.0** package
+is separate. Each download has a SHA256 sidecar. Download the package for your
+system and install it with `sudo apt install ./FILE.deb` or
+`sudo pacman -U ./FILE.pkg.tar.zst`; dependencies come from your distribution.
+Arch and CachyOS binaries are built separately because their library ABIs may
+differ. AUR-ready source bundles are included; AUR submission and a project
+update repository remain future work.
+
+See [package installation and migration](https://github.com/Potato83/MiniFuze-for-Linux/blob/main/docs/packages.md)
+before replacing a script/manual installation. Packages do not restart a running
+mixer, reload the control module or select a device during installation. After a
+fresh DKMS install, use `sudo minifuze2-ctl-setup --user YOUR_DESKTOP_ACCOUNT`
+to select one connected MiniFuse and grant access. Matching kernel headers are
+required. Existing differing settings are retained for review.
+
+The native packages use the original application source commit **676bec2**;
+package metadata also records the later packaging revision. The original
+source/binary archives and `v0.1.0` tag are retained.
+
 Use the **Ubuntu 24.04 x86_64** archive on Ubuntu 24.04, or build the source
 archive on another supported Linux setup. The binary archive uses system
 libraries; it is not a universal Linux package. Both archives include source,
@@ -62,7 +82,7 @@ file between passes; it does not claim gapless playback or zero xruns.
 
 - Disconnecting USB or restarting PipeWire interrupts audio. Ardour's JACK engine needed reconnection after the host PipeWire restart; its saved project was retained.
 - Firmware updates and physical MIDI DIN transfer are not supported by this application.
-- Other sample rates, small buffers, repeated suspend, booting an updated kernel and other distributions/devices still need physical qualification. Compiling a module for another kernel does not qualify operation on it.
+- Other sample rates, small buffers, repeated suspend and other distributions/devices still need physical qualification. After a real upgrade to kernel 7.3.4-1-cachyos, DKMS installation, serial-selected control, hardware meters and the running 48 kHz graph were checked; this was not a fresh listening/DAW test. Compiling a module for another kernel does not qualify operation on it.
 - The desktop currently uses Russian. English translation, accessibility and broader HiDPI testing remain future work.
 - Linux presets retain Solo/Dim/master Mute; Windows `.mfp` export requires disabling those controls and an imported Windows template. Back up presets before returning to an older application: this release writes Linux document version 4.
 - Presets do not switch +48V/INST, select a device or change shared PipeWire rate/buffer settings. Manual clock changes affect the host and are refused while another physical audio device is active.

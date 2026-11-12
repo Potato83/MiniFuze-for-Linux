@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MiniFuse 2 for Linux
+Comment=MiniFuse mixer and interface controls
+Comment[ru]=Микшер и управление MiniFuse 2
+Exec=minifuze2
+Icon=io.github.minifuze2.Control
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;
+StartupNotify=true
+StartupWMClass=io.github.minifuze2.Control

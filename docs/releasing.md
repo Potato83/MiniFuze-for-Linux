@@ -49,3 +49,22 @@ For the stable release, inspect the draft in GitHub Releases, confirm the two
 archives and sidecars, then publish that draft. Until publication the previous
 release remains the public download. Do not retarget a published tag or replace
 published archives; fix a discovered problem in a new version.
+
+## Native packages for the existing 0.1.0 draft
+
+The `release/native-packages` branch workflow builds Ubuntu .deb packages,
+separate Arch/CachyOS binaries and AUR-ready source bundles. The application
+source is checksum-pinned in `packaging/native/upstream.json` to the existing
+0.1.0 tag; the later packaging revision is recorded separately. Do not retarget
+that tag or replace its original four archive/checksum assets.
+
+After package inspections and pacman private-root / Ubuntu runner transactions
+pass, `tools/supplement_release.py` requires the existing release to remain a
+stable **draft**, checks the original tag, adds only the expected native assets
+and updates draft notes. It audits all 18 assets and preserves the original
+archive asset records. It refuses to modify a published release. The workflow
+does not publish the draft. Review its [package guide](packages.md), all seven
+native package/source downloads and their checksums before publication.
+
+After release, package fixes need a new package release and review process;
+this one-time draft supplement workflow is not an automatic update repository.

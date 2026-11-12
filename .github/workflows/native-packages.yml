@@ -1,0 +1,97 @@
+name: Native release packages
+on:
+  push:
+    branches: [release/native-packages]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-packages-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  arch:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: arch-linux
+            image: archlinux:base-devel
+          - platform: cachyos
+            image: cachyos/cachyos:latest
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.image }}
+    timeout-minutes: 30
+    steps:
+      - name: Build dependencies
+        run: pacman -Syu --noconfirm --needed base-devel python git gtk4 libsoup3 json-c libmicrohttpd openssl pipewire pipewire-audio wireplumber dkms desktop-file-utils
+      - uses: actions/checkout@v4
+      - name: Build packages without root
+        env:
+          NATIVE_PLATFORM: ${{ matrix.platform }}
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          runuser -u builder -- python3 tools/package_native.py arch --platform "$NATIVE_PLATFORM"
+          runuser -u builder -- fakeroot python3 tools/test_native_packages.py arch dist/native
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: dist/native/*
+          if-no-files-found: error
+  ubuntu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Application and packaging dependencies
+        run: |
+          bash tools/ci_dependencies.sh app
+          sudo apt-get -o Acquire::ForceIPv4=true install -y dpkg-dev dkms linux-headers-generic
+      - name: Build and inspect Debian packages
+        run: |
+          python3 tools/package_native.py deb
+          python3 tools/test_native_packages.py deb dist/native
+      - name: Install, reinstall and remove on the disposable runner
+        run: |
+          sudo apt-get -o Acquire::ForceIPv4=true install -y ./dist/native/*.deb
+          /usr/bin/minifuze2 --version
+          /usr/bin/minifuze2-engine --version
+          dkms status -m minifuze2-ctl
+          kernel=$(find /usr/src -maxdepth 1 -type d -name 'linux-headers-*-generic' | sort -V | tail -n 1)
+          modinfo -k "${kernel##*/linux-headers-}" minifuze2_ctl
+          test ! -d /sys/module/minifuze2_ctl
+          test ! -f /etc/modprobe.d/minifuze2-ctl.conf
+          test ! -f /etc/modules-load.d/minifuze2-ctl.conf
+          state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/minifuze2"
+          mkdir -p "$state_dir"
+          printf 'preserve-package-test\n' > "$state_dir/mixer.json"
+          sudo apt-get -o Acquire::ForceIPv4=true install --reinstall -y ./dist/native/*.deb
+          sudo apt-get purge -y minifuze2 minifuze2-ctl-dkms
+          test "$(cat "$state_dir/mixer.json")" = preserve-package-test
+          test ! -e /usr/bin/minifuze2
+          test ! -d /usr/src/minifuze2-ctl-0.2.0
+          test -z "$(dkms status -m minifuze2-ctl)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-ubuntu
+          path: dist/native/*
+          if-no-files-found: error
+  supplement-draft:
+    if: github.ref == 'refs/heads/release/native-packages'
+    needs: [arch, ubuntu]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: dist/native
+      - name: Add checked packages to the existing stable draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/supplement_release.py dist/native

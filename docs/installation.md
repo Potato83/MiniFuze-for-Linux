@@ -2,6 +2,10 @@
 
 ## Application
 
+For native Ubuntu 24.04, Arch Linux and CachyOS packages, use the
+[package guide](packages.md), including migration from a script installation.
+The instructions below describe the alternative user-local archive installation.
+
 The Ubuntu 24.04 x86_64 archive contains built executables. Install its runtime
 dependencies first:
 

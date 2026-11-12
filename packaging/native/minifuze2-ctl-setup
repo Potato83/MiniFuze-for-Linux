@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Configure one packaged control endpoint. Never reload a running module/audio.
+set -euo pipefail
+account=${SUDO_USER:-}
+serial=''
+dry_run=false
+while (($#)); do
+  case $1 in
+    --user) account=${2:?Missing desktop account}; shift 2 ;;
+    --serial) serial=${2:?Missing serial}; shift 2 ;;
+    --dry-run) dry_run=true; shift ;;
+    --help) echo 'Usage: minifuze2-ctl-setup --user ACCOUNT [--serial USB_SERIAL] [--dry-run]'; exit 0 ;;
+    *) echo 'Usage: minifuze2-ctl-setup --user ACCOUNT [--serial USB_SERIAL] [--dry-run]' >&2; exit 2 ;;
+  esac
+done
+[[ $account =~ ^[a-z_][a-z0-9_-]{0,31}$ && $(id -u "$account") != 0 ]] || { echo 'Select a desktop account, not root.' >&2; exit 2; }
+if [[ -z $serial ]]; then
+  matches=()
+  for device in /sys/bus/usb/devices/*; do
+    [[ -r $device/idVendor && -r $device/idProduct && -r $device/serial ]] || continue
+    if [[ $(cat "$device/idVendor") == 1c75 && $(cat "$device/idProduct") == af90 ]]; then
+      matches+=("$(cat "$device/serial")")
+    fi
+  done
+  [[ ${#matches[@]} == 1 ]] || { echo 'Connect exactly one MiniFuse 2, or provide --serial.' >&2; exit 1; }
+  serial=${matches[0]}
+fi
+[[ $serial =~ ^[A-Za-z0-9_.:-]{1,127}$ ]] || { echo 'Invalid serial.' >&2; exit 2; }
+config=/etc/modprobe.d/minifuze2-ctl.conf
+autoload=/etc/modules-load.d/minifuze2-ctl.conf
+selection="options minifuze2_ctl device_serial=$serial"
+for file in "$config" "$autoload"; do
+  [[ ! -L $file ]] || { echo 'Refusing a configuration symlink.' >&2; exit 1; }
+done
+if [[ -e $config && $(cat "$config") != "$selection" ]]; then
+  echo 'Existing module selection differs. Review /etc/modprobe.d/minifuze2-ctl.conf before changing it.' >&2; exit 1
+fi
+if [[ -e $autoload && $(cat "$autoload") != minifuze2_ctl ]]; then
+  echo 'Existing autoload configuration differs; review it before changing it.' >&2; exit 1
+fi
+modinfo -k "$(uname -r)" -n minifuze2_ctl >/dev/null || { echo 'Build the DKMS module for the running kernel using its matching headers first.' >&2; exit 1; }
+if entry=$(getent group minifuze2ctl); then
+  IFS=: read -r group_name group_password group_id group_members <<< "$entry"
+  [[ $group_id =~ ^[0-9]+$ && $group_id -lt 1000 ]] || { echo 'minifuze2ctl must be a dedicated system group.' >&2; exit 1; }
+fi
+if $dry_run; then
+  echo 'Checks passed. Setup would retain matching configuration, grant control access and load only if absent. Serial omitted.'
+  exit 0
+fi
+[[ $EUID == 0 ]] || { echo 'Run with sudo to configure the control module.' >&2; exit 1; }
+systemd-sysusers /usr/lib/sysusers.d/minifuze2ctl.conf
+entry=$(getent group minifuze2ctl)
+IFS=: read -r group_name group_password group_id group_members <<< "$entry"
+[[ $group_id =~ ^[0-9]+$ && $group_id -lt 1000 ]] || { echo 'minifuze2ctl must be a dedicated system group.' >&2; exit 1; }
+usermod -a -G minifuze2ctl "$account"
+install -d -m 0755 /etc/modprobe.d /etc/modules-load.d
+if [[ ! -e $config ]]; then printf '%s\n' "$selection" | install -m 0644 /dev/stdin "$config"; fi
+if [[ ! -e $autoload ]]; then printf 'minifuze2_ctl\n' | install -m 0644 /dev/stdin "$autoload"; fi
+udevadm control --reload-rules
+if [[ -d /sys/module/minifuze2_ctl ]]; then
+  loaded_serial=/sys/module/minifuze2_ctl/parameters/device_serial
+  if [[ -r $loaded_serial && $(cat "$loaded_serial") == "$serial" ]]; then
+    echo 'The running module already selects this MiniFuse by serial.'
+  else
+    echo 'Selection saved. The running module was retained; apply selection on next boot or a reviewed control-module reload.'
+  fi
+else
+  modprobe minifuze2_ctl
+fi
+if [[ -c /dev/minifuze2ctl ]]; then
+  udevadm trigger --action=change --subsystem-match=misc --sysname-match=minifuze2ctl
+fi
+echo 'Control setup complete. Group membership applies after a fresh login; audio and hardware switches were retained.'

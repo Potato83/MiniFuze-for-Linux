@@ -1,7 +1,8 @@
 # MiniFuse 2 for Linux
 
 [Releases and downloads](https://github.com/Potato83/MiniFuze-for-Linux/releases)
-— source and Ubuntu 24.04 x86_64 archives with SHA256 checksums.
+— native Ubuntu 24.04, Arch/CachyOS packages, sources and SHA256 checksums.
+[Package installation and migration](docs/packages.md).
 
 **I made in with AI, for my personal use at first**
 

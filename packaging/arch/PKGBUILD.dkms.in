@@ -1,0 +1,20 @@
+# Maintainer: MiniFuse for Linux contributors
+pkgname=minifuze2-ctl-dkms
+pkgver=@VERSION@
+pkgrel=@RELEASE@
+pkgdesc='Optional bounded MiniFuse 2 control endpoint (DKMS sources)'
+arch=('any')
+url='https://github.com/Potato83/MiniFuze-for-Linux'
+license=('GPL-2.0-only' 'MIT')
+depends=('dkms' 'kmod' 'systemd' 'bash' 'shadow')
+makedepends=('python')
+optdepends=('linux-headers: headers for the standard Arch kernel'
+            'linux-cachyos-headers: headers for the CachyOS kernel')
+options=('!debug')
+source=(@SOURCES@)
+sha256sums=(@HASHES@)
+
+package() {
+  python "$srcdir/stage_native.py" --source "$srcdir/MiniFuze-for-Linux-@REVISION@" \
+    --assets "$srcdir" --dest "$pkgdir" --component dkms --metadata "$srcdir/native-build.json"
+}

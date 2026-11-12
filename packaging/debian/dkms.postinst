@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+if [ "$1" = configure ]; then
+    systemd-sysusers /usr/lib/sysusers.d/minifuze2ctl.conf
+    /usr/lib/dkms/common.postinst minifuze2-ctl @VERSION@ /usr/share/minifuze2-ctl-dkms "" "$2"
+    # Reload policy only. Configuration and loading require explicit setup.
+    if [ -d /run/udev ]; then udevadm control --reload-rules; fi
+fi

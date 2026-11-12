@@ -1,0 +1,29 @@
+# Maintainer: MiniFuse for Linux contributors
+pkgname=minifuze2
+pkgver=@VERSION@
+pkgrel=@RELEASE@
+pkgdesc='Independent MiniFuse 2 mixer and GTK control panel'
+arch=('x86_64')
+url='https://github.com/Potato83/MiniFuze-for-Linux'
+license=('MIT')
+depends=('gtk4>=4.12' 'libsoup3' 'json-c' 'libmicrohttpd' 'openssl'
+         'libssl.so' 'libcrypto.so' 'pipewire' 'pipewire-audio' 'wireplumber' 'systemd')
+makedepends=('python' 'pkgconf')
+optdepends=('minifuze2-ctl-dkms: hardware switches and hardware input meters')
+options=('!debug' '!lto')
+source=(@SOURCES@)
+sha256sums=(@HASHES@)
+
+build() {
+  # Do not inherit a distribution's -march=native release defaults.
+  make -C "$srcdir/MiniFuze-for-Linux-@REVISION@" -j2 CFLAGS="$CFLAGS -march=x86-64 -mtune=generic"
+}
+
+check() {
+  make -C "$srcdir/MiniFuze-for-Linux-@REVISION@" check
+}
+
+package() {
+  python "$srcdir/stage_native.py" --source "$srcdir/MiniFuze-for-Linux-@REVISION@" \
+    --assets "$srcdir" --dest "$pkgdir" --component app --metadata "$srcdir/native-build.json"
+}

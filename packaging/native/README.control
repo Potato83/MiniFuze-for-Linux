@@ -1,0 +1,19 @@
+MiniFuse control module configuration
+
+Standard audio works through ALSA. Extra switches and hardware meters require
+this module, matching kernel headers and selection of one MiniFuse by serial.
+
+After installing the package and matching headers, connect the MiniFuse and run:
+  sudo minifuze2-ctl-setup --user YOUR_DESKTOP_ACCOUNT
+
+The setup command detects one connected MiniFuse 2, saves serial selection,
+configures control access and loads the module if not already loaded. It does
+not reload a running module or change +48V, INST, audio routing or PipeWire.
+If several cards are connected, provide --serial explicitly. Existing differing
+configuration is retained for manual review. User group access applies after a
+fresh login; active local sessions may receive udev access immediately.
+
+An existing manual DKMS installation must be migrated before installing this
+package. See https://github.com/Potato83/MiniFuze-for-Linux/blob/main/docs/packages.md
+Never force package-file overwrites or remove a working module before ensuring
+a matching build is available for the running kernel.

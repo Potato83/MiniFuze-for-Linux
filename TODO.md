@@ -13,6 +13,8 @@
 - [x] Finish a 20-minute installed 0.1.0 playback/state/signal observation.
 - [x] Verify preparation source/platform archives and extracted-source build/install checks.
 - [x] Pass both Ubuntu CI jobs on the code preparation commit; repeat them for the release tag.
+- [x] Verify the real boot into 7.3.4-1-cachyos: DKMS, serial-selected control, meters and 48 kHz running graph.
+- [ ] Build and verify native Ubuntu, Arch/CachyOS and optional DKMS packages; supplement the stable draft.
 - [ ] Review and publish the stable draft when ready.
 
 ## Earlier candidate acceptance
@@ -39,6 +41,11 @@
 - [x] Publish the checked prerelease: [v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
 - [ ] Continue collecting user feedback after release.
 
+## Distribution after 0.1.0
+
+- [ ] Publish maintained AUR recipes and decide whether to host signed APT/pacman repositories.
+- [ ] Exercise migration from manual DKMS on a physical host with backups.
+
 ## Next product improvements
 
 - [ ] Manage application playback destinations from the panel, including reconnecting new streams.
@@ -53,7 +60,8 @@
 - [ ] Complete Windows parity for unclassified preset fields and all modes.
 - [ ] Prolonged C-service operation, repeated suspend cycles and DAW recovery
   beyond the short reconnect/restart/suspend checks already documented.
-- [ ] Real kernel-upgrade/DKMS test and other distributions/interfaces.
+- [x] Boot an upgraded 7.3.4-1-cachyos kernel and check DKMS/control/48 kHz graph.
+- [ ] Listening/DAW acceptance after the kernel upgrade and other distributions/interfaces.
 - [ ] Physical input/plugin delay compensation and broader DAW/rate combinations.
 - [ ] Small-buffer 32/64 qualification, prolonged load and USB-hub fault cause.
 - [ ] Electrical calibration of +48V, levels and hardware meters.
