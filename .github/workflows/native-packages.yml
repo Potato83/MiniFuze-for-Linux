@@ -58,7 +58,11 @@ jobs:
           /usr/bin/minifuze2 --version
           /usr/bin/minifuze2-engine --version
           dkms status -m minifuze2-ctl
+          modinfo -k "$(uname -r)" minifuze2_ctl
           kernel=$(find /usr/src -maxdepth 1 -type d -name 'linux-headers-*-generic' | sort -V | tail -n 1)
+          # Header-only generic is not necessarily a bootable/newest kernel on
+          # an Azure runner. Explicitly exercise DKMS against that second target.
+          sudo dkms autoinstall -k "${kernel##*/linux-headers-}"
           modinfo -k "${kernel##*/linux-headers-}" minifuze2_ctl
           test ! -d /sys/module/minifuze2_ctl
           test ! -f /etc/modprobe.d/minifuze2-ctl.conf
