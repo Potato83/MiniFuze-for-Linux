@@ -52,3 +52,31 @@ class ReleaseSupplementTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.module.main()
                 mutate.assert_not_called()
+
+    def test_draft_url_changes_are_allowed_but_original_content_is_retained(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            for name in self.module.NATIVE:
+                (folder/name).write_bytes(b'fixture')
+                (folder/(name+'.sha256')).write_text(hashlib.sha256(b'fixture').hexdigest()+'  '+name+'\n')
+            originals = [dict(name=name, id=name, apiUrl='api/'+name, size=4,
+                              createdAt='2026-11-12', url='old-draft/'+name)
+                         for name in self.module.ORIGINAL]
+            assets = [dict(asset, url='new-draft/'+asset['name']) for asset in originals]
+            assets += [dict(name=path.name) for path in folder.iterdir()]
+            before = dict(url='old-draft', assets=originals)
+            after = dict(url='new-draft', assets=assets)
+
+            def hashes(names):
+                return {name: ('original-content-hash' if name in self.module.ORIGINAL else
+                               hashlib.sha256((folder/name).read_bytes()).hexdigest()) for name in names}
+
+            with patch('sys.argv', ['supplement', temporary]), \
+                 patch.object(self.module.subprocess, 'check_output', return_value=self.module.SOURCE), \
+                 patch.object(self.module.subprocess, 'run') as mutate, \
+                 patch.object(self.module, 'draft', side_effect=[before]+[after]*18), \
+                 patch.object(self.module, 'download_hashes', side_effect=hashes):
+                self.module.main()
+                self.assertEqual(mutate.call_count, 15)  # 14 native uploads + notes.
+                self.assertTrue(all(call.args[0][3] not in self.module.ORIGINAL
+                                    for call in mutate.call_args_list[:14]))
