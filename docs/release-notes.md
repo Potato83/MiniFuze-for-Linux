@@ -53,6 +53,11 @@ also recovered the mixer. The control module must already use serial selection
 for hardware controls to follow a USB-port change. Detailed results and their
 limits are in `docs/hardware-validation.md`.
 
+The installed 0.1.0 also completed a 20-minute playback observation: 238 state
+checks and 40 complete one-second digital buffers with no clipping. The operator
+confirmed clean music. The test sampled audio periodically and restarted the
+file between passes; it does not claim gapless playback or zero xruns.
+
 ## Known limits
 
 - Disconnecting USB or restarting PipeWire interrupts audio. Ardour's JACK engine needed reconnection after the host PipeWire restart; its saved project was retained.

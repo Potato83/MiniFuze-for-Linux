@@ -37,4 +37,17 @@ jobs:
           flags=()
           if [[ "$RELEASE_DRAFT" == true ]]; then flags+=(--draft); fi
           if [[ "$RELEASE_PRERELEASE" == true ]]; then flags+=(--prerelease); fi
-          gh release create "$RELEASE_TAG" dist/*.tar.gz dist/*.sha256 --verify-tag "${flags[@]}" --title "MiniFuse 2 for Linux $RELEASE_TAG" --notes-file docs/release-notes.md
+          release_url=$(gh release create "$RELEASE_TAG" dist/*.tar.gz dist/*.sha256 --verify-tag "${flags[@]}" --title "MiniFuse 2 for Linux $RELEASE_TAG" --notes-file docs/release-notes.md)
+          gh release view "$RELEASE_TAG" --json tagName,isDraft,isPrerelease,assets,url > /tmp/minifuze-created-release.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          release = json.loads(Path('/tmp/minifuze-created-release.json').read_text())
+          assert release['tagName'] == os.environ['RELEASE_TAG']
+          assert release['isDraft'] == (os.environ['RELEASE_DRAFT'] == 'true')
+          assert release['isPrerelease'] == (os.environ['RELEASE_PRERELEASE'] == 'true')
+          expected = {p.name for p in Path('dist').iterdir() if p.name.endswith(('.tar.gz', '.sha256'))}
+          assert {asset['name'] for asset in release['assets']} == expected
+          PY
+          printf '::notice title=GitHub release prepared::%s\n' "$release_url"
+          printf 'Release files verified: %s\n' "$release_url" >> "$GITHUB_STEP_SUMMARY"

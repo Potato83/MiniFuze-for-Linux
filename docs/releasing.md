@@ -24,12 +24,12 @@ A verified extracted source archive can also be packaged without Git.
 ```sh
 bash tools/package_release.sh
 MF_PACKAGE_PLATFORM=cachyos-x86_64 bash tools/package_release.sh --binary
-python3 tools/release.py verify --version "$(cat VERSION)" dist/*.tar.gz
+python3 tools/release.py verify --version "$(cat VERSION)" dist/minifuze2-"$(cat VERSION)"-*.tar.gz
 ```
 
 Keep old outputs. `--output-dir /absolute/path` selects a different destination;
 existing archives are never overwritten. Source content, permissions, timestamps
-and compression are normalized so the same source produces identical archives.
+and compression are normalized so the same source and packaging tools produce identical archives.
 Binary contents still depend on the build toolchain and system libraries.
 `BUILD-INFO.json` records the application/module versions, source revision,
 source date and platform. Every file is covered by `SHA256SUMS`; a sidecar covers

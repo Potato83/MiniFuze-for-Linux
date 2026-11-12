@@ -15,7 +15,8 @@ inside the extracted directory. The binaries are linked for Ubuntu 24.04;
 rebuild the source on another distribution. The Russian first-run guide is
 [here](quickstart.ru.md).
 
-Build with `make`, then run `bash tools/install_desktop.sh` as the desktop user.
+For a source archive, build with `make` first. For either archive, run
+`bash tools/install_desktop.sh` as the desktop user.
 It creates `~/.local/bin/minifuze2`, `~/.local/bin/minifuze2-engine`, a scalable
 icon, `io.github.minifuze2.Control.desktop`, and a file manifest under
 `~/.local/share/minifuze2/`. A new installation also creates and enables

@@ -10,9 +10,9 @@
 - [x] Pass 37 software tests and 31 isolated GTK stages before final packaging checks.
 - [x] Compile the unchanged module for installed 6.18.60 LTS and 7.3.3 headers without loading it.
 - [x] Update the real managed installation to 0.1.0 while preserving mix, selection and hardware switches.
-- [ ] Finish a 20-minute installed 0.1.0 playback/state/signal observation.
-- [ ] Verify final source/platform archives and extracted-source build/install checks.
-- [ ] Pass both Ubuntu CI jobs on the final preparation commit.
+- [x] Finish a 20-minute installed 0.1.0 playback/state/signal observation.
+- [x] Verify preparation source/platform archives and extracted-source build/install checks.
+- [x] Pass both Ubuntu CI jobs on the code preparation commit; repeat them for the release tag.
 - [ ] Review and publish the stable draft when ready.
 
 ## Earlier candidate acceptance

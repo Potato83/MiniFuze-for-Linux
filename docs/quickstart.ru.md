@@ -11,6 +11,12 @@
 Проверка Ubuntu в CI охватывает сборку и программные тесты; физическая карта
 проверялась на CachyOS.
 
+На Ubuntu 24.04 установи зависимости готовой сборки:
+
+```sh
+sudo apt install libgtk-4-1 libsoup-3.0-0 libjson-c5 libmicrohttpd12t64 libssl3t64 pipewire-bin wireplumber
+```
+
 Положи архив и его `.sha256` в одну папку, затем выполни:
 
 ```sh

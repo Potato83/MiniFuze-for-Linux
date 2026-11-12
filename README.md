@@ -164,7 +164,7 @@ the two executables built for the current Linux system. Archives carry checksums
 their binaries use system libraries and are not universal Linux packages.
 Neither command publishes anything to GitHub. Only tracked source files are
 included; `BUILD-INFO.json` records the source commit. Verify complete archives
-with `python3 tools/release.py verify dist/*.tar.gz`.
+with `python3 tools/release.py verify dist/minifuze2-0.1.0-*.tar.gz`.
 
 Studio controls and file compatibility are described in [the desktop guide](docs/desktop-design.md).
 The candidate also passed a 48 kHz physical loopback, same-port USB reconnect

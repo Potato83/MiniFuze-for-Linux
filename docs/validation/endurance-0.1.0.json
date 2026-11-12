@@ -1,0 +1,49 @@
+{
+  "name": "installed_0_1_0_endurance",
+  "result": "pass",
+  "elapsed_seconds": 1200.03,
+  "sample_rate_hz": 48000,
+  "rate_buffer": "Auto",
+  "state_observations": 238,
+  "one_second_digital_audio_samples": 40,
+  "music_passes_started": 7,
+  "final_checks": {
+    "mixer_preserved": true,
+    "same_engine_pid": true,
+    "default_devices_preserved": true,
+    "installed_binary_preserved": true,
+    "hardware_switches_preserved": true
+  },
+  "failures": [],
+  "continuous_analog_capture": false,
+  "xrun_free_claim": false,
+  "limits": [
+    "Periodic complete one-second digital buffers and service state were sampled; this does not establish absence of glitches between samples.",
+    "No electrical measurement, repeated suspend, small-buffer or other sample-rate qualification.",
+    "Music restarted at track boundaries; this was not gapless continuous playback.",
+    "pw-cat may report status 1 after producing a complete capture; sizes, finite values and clipping are checked independently."
+  ],
+  "candidate": "0.1.0",
+  "date": "2026-11-12",
+  "kernel": "7.3.1-1-cachyos",
+  "pipewire": "1.6.11",
+  "control_module": "0.2.0",
+  "state_poll_interval_seconds": 5,
+  "digital_poll_interval_seconds": 30,
+  "digital_buffer_seconds": 1,
+  "buffers_with_signal_in_both_channels": 39,
+  "quiet_buffers": 1,
+  "quiet_buffer_elapsed_seconds": 552.75,
+  "source_tail_contains_silence": true,
+  "quiet_buffer_note": "The quiet sample occurred near the third file boundary, consistent with the source file ending in silence and the non-gapless playback restarts. Exact source/capture clock alignment was not measured.",
+  "peak_dbfs_maximum_per_channel": [
+    -23.646832849479395,
+    -23.489409725002712
+  ],
+  "clipped_samples_total": 0,
+  "capture_exit_codes": [
+    1
+  ],
+  "all_capture_stderr_empty": true,
+  "operator_listening": "Operator confirmed the music sounded good during the endurance observation."
+}
