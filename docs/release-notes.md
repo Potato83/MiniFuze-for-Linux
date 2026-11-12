@@ -35,6 +35,11 @@ session saving and recorded-voice playback; Ardour reported no xruns in that ses
 USB port changes also recovered audio and mix; hardware controls/meters recovered
 automatically after applying serial selection to the running control module.
 See the hardware report for the initial configuration issue and retest.
+An operator-approved host PipeWire restart also restored the mixer, endpoints,
+hardware control and clean headphone playback automatically, preserving mix,
+defaults and forced clock settings. The saved Ardour project remained open,
+but its JACK engine stopped and required reconnection. The restart adopted
+the host's already installed PipeWire 1.6.11 from a running 1.6.10 instance.
 Suspend recovery and long-session qualification remain pending.
 MIDI DIN transfer, firmware updates, small-buffer qualification and
 additional distribution/hardware combinations remain outside the supported claims.

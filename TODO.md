@@ -19,7 +19,8 @@
 - [x] Confirm that direct stereo monitoring routes Input 1 to the left headphone.
 - [x] Exercise Ardour 9.8 music playback, simultaneous microphone recording, saving and voice replay at 48 kHz.
 - [x] Confirm USB port changes retain audio/mix and, after applying serial selection, hardware controls/meters.
-- [ ] Confirm suspend/resume and full host PipeWire restart on hardware.
+- [x] Confirm mixer recovery after full host PipeWire restart; a JACK DAW may require audio-engine reconnection.
+- [ ] Confirm suspend/resume on hardware.
 - [x] Publish the checked prerelease: [v0.1.0-rc.1](https://github.com/Potato83/MiniFuze-for-Linux/releases/tag/v0.1.0-rc.1).
 - [ ] Collect feedback before declaring a stable release.
 

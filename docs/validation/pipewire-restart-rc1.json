@@ -1,0 +1,75 @@
+{
+  "candidate": "0.1.0-rc.1",
+  "date": "2026-11-12",
+  "kernel": "7.3.1-1-cachyos",
+  "control_module": "0.2.0",
+  "operation": {
+    "action": "Operator-approved restart of the host PipeWire, WirePlumber and pipewire-pulse services. The installed minifuze2.service followed its PartOf dependency.",
+    "source_engine_updated": false,
+    "hardware_commands_replayed": false,
+    "manual_recovery_used": false
+  },
+  "pipewire": {
+    "before": "1.6.10",
+    "after": "1.6.11",
+    "note": "The restart adopted the newer PipeWire already installed by host package updates; this check did not install or replace host packages."
+  },
+  "recovery": {
+    "result": "pass",
+    "checks": {
+      "host_pipewire_instance_changed": true,
+      "all_services_active": true,
+      "graph_and_eight_public_endpoints_recovered": true,
+      "selected_device_preserved": true,
+      "mixer_preserved": true,
+      "dirty_flag_preserved": true,
+      "default_devices_preserved": true,
+      "forced_clock_settings_preserved": true,
+      "hardware_switches_preserved": true,
+      "installed_engine_unchanged": true
+    },
+    "manual_recovery_used": false,
+    "elapsed_seconds": 7.73,
+    "engine_restarted": true,
+    "actual_rate_hz": 48000
+  },
+  "digital_signal": {
+    "name": "post_restart_stereo_digital_signal",
+    "result": "pass",
+    "duration_seconds": 1,
+    "sample_rate_hz": 48000,
+    "channels": [
+      {
+        "channel": 1,
+        "peak_dbfs": -23.93112581119211,
+        "rms_dbfs": -33.97586152426869,
+        "clipped_samples": 0
+      },
+      {
+        "channel": 2,
+        "peak_dbfs": -23.814618405565824,
+        "rms_dbfs": -34.015514576381236,
+        "clipped_samples": 0
+      }
+    ],
+    "endpoint": "minifuze2_loopback78",
+    "capture_exit_code": 1,
+    "capture_note": "pw-cat returned status 1 with empty stderr after producing exactly the requested 48000 stereo float32 frames. Signal metrics cover that complete buffer."
+  },
+  "listening_after_recovery": "Operator confirmed clean music in both headphones.",
+  "ardour": {
+    "session_open": true,
+    "audio_engine_running_after_restart": false,
+    "xruns_after_restart": 6,
+    "automatic_reconnection": false,
+    "saved_session_retained": true
+  },
+  "limits": [
+    "Audio was interrupted during the intentional host restart; this is not a seamless failover test.",
+    "The mixer service restarted through its systemd dependency; the engine process was not preserved.",
+    "Ardour kept its saved session open but its JACK audio engine stopped; automatic DAW reconnection did not pass.",
+    "The digital sample check covers one second of complete stereo data, not endurance or analog-output quality.",
+    "No suspend/resume, reboot, kernel upgrade or other sample rates are covered.",
+    "No serials, personal paths, voice or music are included."
+  ]
+}
