@@ -2,8 +2,8 @@
 
 Releases 0.1.0 and 0.1.1 include application packages for **Ubuntu 24.04 amd64**,
 **Arch Linux x86_64** and **CachyOS x86_64**, plus a separate optional
-**minifuze2-ctl-dkms 0.2.0** package. Source bundles contain AUR-ready recipes;
-they have not been submitted to AUR. There is no project APT/pacman repository
+**minifuze2-ctl-dkms 0.2.0** package. Version 0.1.0 includes AUR-ready source
+bundles; they have not been submitted to AUR. There is no project APT/pacman repository
 yet: download local packages from GitHub Releases. Automatic package-manager
 updates will require a repository or published AUR recipes in a later step.
 
@@ -15,10 +15,11 @@ updates will require a repository or published AUR recipes in a later step.
 
 ## Новая установка
 
-Скачай нужный пакет и его файл `.sha256` из одного релиза. Например:
+Скачай нужный пакет из релиза. Контрольные суммы SHA-256 опубликованы в
+описании релиза: выполни `sha256sum ИМЯ_ФАЙЛА` и сравни результат. Например:
 
 ```sh
-sha256sum -c minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst.sha256
+sha256sum minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst
 sudo pacman -U ./minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst
 ```
 
@@ -26,7 +27,7 @@ sudo pacman -U ./minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst
 Для Ubuntu 24.04:
 
 ```sh
-sha256sum -c minifuze2_0.1.1-1_amd64.deb.sha256
+sha256sum minifuze2_0.1.1-1_amd64.deb
 sudo apt install ./minifuze2_0.1.1-1_amd64.deb
 ```
 
@@ -52,7 +53,7 @@ systemctl --user enable --now minifuze2.service
 
 ```sh
 sudo pacman -S --needed linux-cachyos-headers
-sha256sum -c minifuze2-ctl-dkms-0.2.0-1-any.pkg.tar.zst.sha256
+sha256sum minifuze2-ctl-dkms-0.2.0-1-any.pkg.tar.zst
 sudo pacman -U ./minifuze2-ctl-dkms-0.2.0-1-any.pkg.tar.zst
 ```
 
@@ -61,7 +62,7 @@ sudo pacman -U ./minifuze2-ctl-dkms-0.2.0-1-any.pkg.tar.zst
 
 ```sh
 sudo apt install linux-headers-generic
-sha256sum -c minifuze2-ctl-dkms_0.2.0-1_all.deb.sha256
+sha256sum minifuze2-ctl-dkms_0.2.0-1_all.deb
 sudo apt install ./minifuze2-ctl-dkms_0.2.0-1_all.deb
 ```
 
