@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+ROOT = Path(__file__).resolve().parents[1]
+UPSTREAM = json.loads((ROOT/'packaging/native/upstream.json').read_text())
 
 def run(*args, **kwargs):
     return subprocess.run(list(map(str, args)), check=True, **kwargs)
@@ -22,12 +24,12 @@ def inspect(root, component, payload_only=True):
     assert not any(p.suffix == '.ko' for p in files)
     name = 'minifuze2' if component == 'app' else 'minifuze2-ctl-dkms'
     metadata = json.loads((root/f'usr/share/doc/{name}/BUILD-INFO.json').read_text())
-    assert metadata['source_revision'] == '676bec2bccc08bfa7ef6f645e5d09cfc6f1b3539'
-    assert metadata['application_version'] == '0.1.0'
+    assert metadata['source_revision'] == UPSTREAM['source_revision']
+    assert metadata['application_version'] == UPSTREAM['application_version']
     if component == 'app':
         for binary in ('minifuze2', 'minifuze2-engine'):
             version = subprocess.check_output([str(root/'usr/bin'/binary), '--version'], text=True)
-            assert version.strip().split()[-1] == '0.1.0'
+            assert version.strip().split()[-1] == UPSTREAM['application_version']
         run('desktop-file-validate', root/'usr/share/applications/io.github.minifuze2.Control.desktop')
         unit = (root/'usr/lib/systemd/user/minifuze2.service').read_text()
         assert '/usr/bin/minifuze2-engine' in unit and '%S/minifuze2/working.json' in unit

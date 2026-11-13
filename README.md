@@ -13,13 +13,12 @@ the audio service running.
 
 [Инструкция по-русски](README.ru.md)
 
-**Version: 0.1.0.** Tested on one MiniFuse 2 with firmware 1.5.0,
+**Version: 0.1.1.** Tested on one MiniFuse 2 with firmware 1.5.0,
 CachyOS x86_64 and kernel 7.3.1-1-cachyos. Other distributions
 and future kernels require testing. This is not an Arturia product.
 The physically qualified audio mode is **48 kHz with automatic rate/buffer
 settings**. Other rates and small buffers remain unqualified.
-The published 0.1.0 desktop interface is in Russian; the development version
-also supports English (Settings → Appearance → Language). Language changes
+The desktop supports Russian and English (Settings → Appearance → Language). Language changes
 apply after reopening the window. System file dialogs and detailed system errors
 may still use the system language. The studio features have local
 software and isolated GTK coverage. Physical checks include loopback measurements,
@@ -30,7 +29,7 @@ Ardour 9.8 playback/recording session at 48 kHz. Broader hardware qualification
 remains pending; see [hardware acceptance](docs/hardware-validation.md) and
 [release notes](docs/release-notes.md).
 
-![Development desktop in an isolated software-only test session](docs/images/desktop-en.png)
+![Desktop in an isolated software-only test session](docs/images/desktop-en.png)
 
 ## Features
 
@@ -50,7 +49,7 @@ remains pending; see [hardware acceptance](docs/hardware-validation.md) and
 - Compact dark studio desktop by default; light/dark themes switch instantly in Settings → Appearance.
   The choice is saved in `$XDG_CONFIG_HOME/minifuze2/desktop.ini` separately
   from audio and preset settings.
-- In the development version, choose English, Russian or the system language
+- Choose English, Russian or the system language
   in Settings → Appearance → Language. Reopen the application window to apply it.
 - A local web panel remains available as a fallback.
   It currently uses Russian independently of the desktop language setting.

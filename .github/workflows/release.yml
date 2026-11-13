@@ -7,8 +7,10 @@ permissions:
 jobs:
   validate:
     uses: ./.github/workflows/build.yml
+  native:
+    uses: ./.github/workflows/native-packages.yml
   publish:
-    needs: validate
+    needs: [validate, native]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -17,37 +19,43 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: minifuze-release-files
-          path: dist
-      - name: Classify the version tag
-        id: version
+          path: dist/release
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: dist/native
+      - name: Verify all release files
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: python3 tools/release.py classify "$RELEASE_TAG" --github-output "$GITHUB_OUTPUT"
-      - name: Verify complete release archives
         run: |
+          python3 tools/release.py classify "$RELEASE_TAG"
+          test "$RELEASE_TAG" = v0.1.1
           test "$(head -n 1 docs/release-notes.md)" = "# MiniFuse 2 for Linux $(cat VERSION)"
-          python3 tools/release.py verify --version "$(cat VERSION)" dist/*.tar.gz
-      - name: Create the GitHub release
+          python3 tools/release.py verify --version "$(cat VERSION)" dist/release/*.tar.gz
+          python3 tools/verify_test_release.py dist/release dist/native
+      - name: Create and audit test release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_DRAFT: ${{ steps.version.outputs.draft }}
-          RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
-          flags=()
-          if [[ "$RELEASE_DRAFT" == true ]]; then flags+=(--draft); fi
-          if [[ "$RELEASE_PRERELEASE" == true ]]; then flags+=(--prerelease); fi
-          release_url=$(gh release create "$RELEASE_TAG" dist/*.tar.gz dist/*.sha256 --verify-tag "${flags[@]}" --title "MiniFuse 2 for Linux $RELEASE_TAG" --notes-file docs/release-notes.md)
-          gh release view "$RELEASE_TAG" --json tagName,isDraft,isPrerelease,assets,url > /tmp/minifuze-created-release.json
+          gh release create "$RELEASE_TAG" dist/release/* dist/native/* --verify-tag --draft --prerelease --title "MiniFuse 2 for Linux $RELEASE_TAG — testing" --notes-file docs/release-notes.md
+          mkdir /tmp/minifuze-downloads
+          gh release download "$RELEASE_TAG" --dir /tmp/minifuze-downloads
+          python3 tools/verify_test_release.py /tmp/minifuze-downloads
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          local = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for d in ('dist/release', 'dist/native') for p in Path(d).iterdir() if p.is_file()}
+          remote = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in Path('/tmp/minifuze-downloads').iterdir() if p.is_file()}
+          assert local == remote, 'Downloaded files differ from the tested artifacts'
+          PY
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease
+          gh release view "$RELEASE_TAG" --json tagName,isDraft,isPrerelease,url > /tmp/minifuze-release.json
           python3 - <<'PY'
           import json, os
           from pathlib import Path
-          release = json.loads(Path('/tmp/minifuze-created-release.json').read_text())
-          assert release['tagName'] == os.environ['RELEASE_TAG']
-          assert release['isDraft'] == (os.environ['RELEASE_DRAFT'] == 'true')
-          assert release['isPrerelease'] == (os.environ['RELEASE_PRERELEASE'] == 'true')
-          expected = {p.name for p in Path('dist').iterdir() if p.name.endswith(('.tar.gz', '.sha256'))}
-          assert {asset['name'] for asset in release['assets']} == expected
+          release = json.loads(Path('/tmp/minifuze-release.json').read_text())
+          assert release['tagName'] == os.environ['RELEASE_TAG'] and not release['isDraft'] and release['isPrerelease']
+          print('::notice title=Test release published::'+release['url'])
           PY
-          printf '::notice title=GitHub release prepared::%s\n' "$release_url"
-          printf 'Release files verified: %s\n' "$release_url" >> "$GITHUB_STEP_SUMMARY"

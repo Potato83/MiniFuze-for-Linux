@@ -65,7 +65,7 @@ def review():
         raise ValueError('Unexpected final release asset set')
     hashes_before = download_hashes(expected, verify_sidecars=True)
     draft()
-    notes = Path('docs/release-notes.md')
+    notes = Path('docs/validation/release-notes-0.1.0.md')
     if notes.read_text().splitlines()[0] != '# MiniFuse 2 for Linux 0.1.0':
         raise ValueError('Release note version mismatch')
     subprocess.run(['gh', 'release', 'edit', TAG, '--notes-file', str(notes)], check=True)
@@ -116,7 +116,7 @@ def main():
         draft()  # Recheck the publication boundary before each mutation.
         subprocess.run(['gh', 'release', 'upload', TAG, str(files[name]), '--clobber'], check=True)
     draft()
-    subprocess.run(['gh', 'release', 'edit', TAG, '--notes-file', 'docs/release-notes.md'], check=True)
+    subprocess.run(['gh', 'release', 'edit', TAG, '--notes-file', 'docs/validation/release-notes-0.1.0.md'], check=True)
     after = draft()
     assets = {asset['name']: asset for asset in after['assets']}
     if assets.keys() != ORIGINAL | expected:

@@ -1,6 +1,6 @@
 # Native packages / Установка через пакетный менеджер
 
-Release 0.1.0 includes application packages for **Ubuntu 24.04 amd64**,
+Releases 0.1.0 and 0.1.1 include application packages for **Ubuntu 24.04 amd64**,
 **Arch Linux x86_64** and **CachyOS x86_64**, plus a separate optional
 **minifuze2-ctl-dkms 0.2.0** package. Source bundles contain AUR-ready recipes;
 they have not been submitted to AUR. There is no project APT/pacman repository
@@ -18,16 +18,16 @@ updates will require a repository or published AUR recipes in a later step.
 Скачай нужный пакет и его файл `.sha256` из одного релиза. Например:
 
 ```sh
-sha256sum -c minifuze2-0.1.0-1-cachyos-x86_64.pkg.tar.zst.sha256
-sudo pacman -U ./minifuze2-0.1.0-1-cachyos-x86_64.pkg.tar.zst
+sha256sum -c minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst.sha256
+sudo pacman -U ./minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst
 ```
 
-Для Arch используй `minifuze2-0.1.0-1-arch-linux-x86_64.pkg.tar.zst`.
+Для Arch используй `minifuze2-0.1.1-1-arch-linux-x86_64.pkg.tar.zst`.
 Для Ubuntu 24.04:
 
 ```sh
-sha256sum -c minifuze2_0.1.0-1_amd64.deb.sha256
-sudo apt install ./minifuze2_0.1.0-1_amd64.deb
+sha256sum -c minifuze2_0.1.1-1_amd64.deb.sha256
+sudo apt install ./minifuze2_0.1.1-1_amd64.deb
 ```
 
 Запусти **MiniFuse 2 for Linux** из меню. Системная пользовательская служба
@@ -148,7 +148,7 @@ MiniFuse укажи `--serial USB_SERIAL`. Серийный номер не пе
 ## Сборка и происхождение пакетов
 
 Пакеты 0.1.0 используют исходники неизменного тега `v0.1.0`, коммит
-`676bec2bccc08bfa7ef6f645e5d09cfc6f1b3539`, с проверкой SHA256. Рецепты упаковки
+`676bec2bccc08bfa7ef6f645e5d09cfc6f1b3539`, с проверкой SHA256. Для 0.1.1 исходная ревизия и её SHA256 указаны в `packaging/native/upstream.json` и метаданных каждого пакета. Рецепты упаковки
 добавлены отдельно, поэтому `BUILD-INFO.json` пакета записывает **оба** коммита:
 исходники приложения и ревизию упаковки. Ранее подготовленные исходный и
 бинарный архивы релиза сохраняются. Пакеты не содержат готового `.ko`, серийного

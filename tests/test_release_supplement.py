@@ -95,7 +95,7 @@ class ReleaseSupplementTests(unittest.TestCase):
         expected = self.module.ORIGINAL | self.module.NATIVE | {name+'.sha256' for name in self.module.NATIVE}
         release = {'assets': [{'name': name, 'id': name, 'size': 5} for name in expected], 'url': 'draft'}
         hashes = {name: 'verified' for name in expected}
-        outputs = [self.module.SOURCE, json.dumps({'body': (ROOT/'docs/release-notes.md').read_text()})]
+        outputs = [self.module.SOURCE, json.dumps({'body': (ROOT/'docs/validation/release-notes-0.1.0.md').read_text()})]
         with patch.object(self.module.subprocess, 'check_output', side_effect=outputs), \
              patch.object(self.module, 'draft', return_value=release), \
              patch.object(self.module, 'download_hashes', return_value=hashes) as download, \
@@ -103,7 +103,7 @@ class ReleaseSupplementTests(unittest.TestCase):
              patch('sys.stdout', new_callable=io.StringIO):
             self.module.review()
             mutate.assert_called_once_with(['gh', 'release', 'edit', 'v0.1.0',
-                                            '--notes-file', 'docs/release-notes.md'], check=True)
+                                            '--notes-file', 'docs/validation/release-notes-0.1.0.md'], check=True)
             self.assertEqual(download.call_count, 2)
             for call in download.call_args_list:
                 self.assertEqual(call.args, (expected,))

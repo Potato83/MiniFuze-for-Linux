@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Add English and Russian desktop language selection with system default.
+- Improve mixer typography, fader visibility and light-theme contrast.
+- Check both languages in the isolated GTK integration workflow.
+
 ## 0.1.0
 
 - Keep the underlying MiniFuse control error when an ioctl fails, so an unavailable device is reported accurately.
