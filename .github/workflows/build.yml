@@ -5,6 +5,10 @@ on:
   pull_request:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
 permissions:
   contents: read
 jobs:
@@ -13,6 +17,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
       - name: Dependencies
         run: bash tools/ci_dependencies.sh app
       - name: Build
@@ -67,6 +73,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
       - name: Kernel build dependencies
         run: bash tools/ci_dependencies.sh kernel
       - name: Build module without loading it

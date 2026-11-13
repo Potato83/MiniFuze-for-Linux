@@ -1,14 +1,21 @@
 name: Prepare GitHub release
 on:
   push:
-    tags: ['v*']
+    tags: ['v0.1.1']
+    branches: ['release/recover-0.1.1']
 permissions:
   contents: read
 jobs:
   validate:
     uses: ./.github/workflows/build.yml
+    with:
+      source_ref: refs/tags/v0.1.1
   native:
     uses: ./.github/workflows/native-packages.yml
+    permissions:
+      contents: write
+    with:
+      source_ref: refs/tags/v0.1.1
   publish:
     needs: [validate, native]
     runs-on: ubuntu-24.04
@@ -16,6 +23,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/v0.1.1
       - uses: actions/download-artifact@v4
         with:
           name: minifuze-release-files
@@ -27,7 +36,7 @@ jobs:
           path: dist/native
       - name: Verify all release files
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: v0.1.1
         run: |
           python3 tools/release.py classify "$RELEASE_TAG"
           test "$RELEASE_TAG" = v0.1.1
@@ -37,7 +46,7 @@ jobs:
       - name: Create and audit test release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: v0.1.1
         run: |
           gh release create "$RELEASE_TAG" dist/release/* dist/native/* --verify-tag --draft --prerelease --title "MiniFuse 2 for Linux $RELEASE_TAG — testing" --notes-file docs/release-notes.md
           mkdir /tmp/minifuze-downloads

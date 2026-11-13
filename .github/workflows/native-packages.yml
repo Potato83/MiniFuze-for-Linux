@@ -4,6 +4,10 @@ on:
     branches: [release/native-packages]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -26,6 +30,8 @@ jobs:
       - name: Build dependencies
         run: pacman -Syu --noconfirm --needed base-devel python git gtk4 libsoup3 json-c libmicrohttpd openssl pipewire pipewire-audio wireplumber dkms desktop-file-utils
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
       - name: Build packages without root
         env:
           NATIVE_PLATFORM: ${{ matrix.platform }}
@@ -44,6 +50,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
       - name: Application and packaging dependencies
         run: |
           bash tools/ci_dependencies.sh app
