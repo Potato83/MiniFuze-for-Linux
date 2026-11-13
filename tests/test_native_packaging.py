@@ -75,6 +75,18 @@ class NativePackagingTests(unittest.TestCase):
                 self.builder.extract_source(archive, self.work/'unpack')
         self.assertFalse((self.work/'escape').exists())
 
+    def test_extracted_snapshot_has_verified_source_identity(self):
+        archive = self.work/'source.tar.gz'
+        prefix = 'MiniFuze-for-Linux-'+self.builder.UPSTREAM['source_revision']
+        data = (self.builder.UPSTREAM['application_version']+'\n').encode()
+        with tarfile.open(archive, 'w:gz') as tar:
+            entry = tarfile.TarInfo(prefix+'/VERSION')
+            entry.size = len(data)
+            tar.addfile(entry, io.BytesIO(data))
+        source = self.builder.extract_source(archive, self.work/'unpack')
+        info = json.loads((source/'BUILD-INFO.json').read_text())
+        self.assertEqual(info['source_revision'], self.builder.UPSTREAM['source_revision'])
+
     def test_artifact_checksum_and_existing_output_are_protected(self):
         source = self.work/'source.pkg'
         source.write_bytes(b'package fixture')

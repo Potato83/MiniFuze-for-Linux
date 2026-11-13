@@ -14,6 +14,12 @@ options=('!debug' '!lto')
 source=(@SOURCES@)
 sha256sums=(@HASHES@)
 
+prepare() {
+  # The checksum-pinned GitHub archive has no Git history. Preserve its
+  # verified identity for tests that exercise the packaging helpers.
+  cp "$srcdir/native-build.json" "$srcdir/MiniFuze-for-Linux-@REVISION@/BUILD-INFO.json"
+}
+
 build() {
   # Do not inherit a distribution's -march=native release defaults.
   make -C "$srcdir/MiniFuze-for-Linux-@REVISION@" -j2 CFLAGS="$CFLAGS -march=x86-64 -mtune=generic"

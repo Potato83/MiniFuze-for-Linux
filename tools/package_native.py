@@ -70,6 +70,12 @@ def extract_source(archive, dest):
     source = dest/prefix
     if (source/'VERSION').read_text().strip() != UPSTREAM['application_version']:
         raise ValueError('Pinned source version mismatch')
+    # GitHub source snapshots do not contain .git or release BUILD-INFO.json.
+    # Tests that exercise packaging still need the authenticated source identity.
+    (source/'BUILD-INFO.json').write_text(json.dumps({
+        'source_revision': UPSTREAM['source_revision'],
+        'source_date_epoch': int(os.environ.get('SOURCE_DATE_EPOCH', '0')),
+    })+'\n')
     return source
 
 

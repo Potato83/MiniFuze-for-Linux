@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: write
     with:
-      source_ref: refs/tags/v0.1.1
+      source_ref: ${{ github.sha }}
   publish:
     needs: [validate, native]
     runs-on: ubuntu-24.04
