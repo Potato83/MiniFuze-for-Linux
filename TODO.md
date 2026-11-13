@@ -54,7 +54,7 @@
 - [ ] Manage application playback destinations from the panel, including reconnecting new streams.
 - [ ] Named preset library with search and recent files (portable file presets already work).
 - [ ] Diagnostic report with serial numbers and personal paths removed.
-- [ ] RU/EN interface translation and broader accessibility/HiDPI acceptance.
+- [ ] Finish localization of the fallback web panel and broader accessibility/HiDPI acceptance. The development GTK desktop has RU/EN selection; system dialogs and unrecognized service errors may use their original language.
 
 ## Remaining functional coverage
 

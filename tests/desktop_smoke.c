@@ -52,6 +52,12 @@ static gboolean drive(gpointer unused) {
       str(get(idx(get(u->state, "playback"), 0), "name")), "mf_desktop_test_"));
   switch (stage++) {
   case 0:
+    if (!g_strcmp0(g_getenv("LANGUAGE"), "ru"))
+      g_assert_false(mf_english);
+    else if (!g_strcmp0(g_getenv("LANGUAGE"), "en"))
+      g_assert_true(mf_english);
+    g_assert_cmpstr(gtk_button_get_label(GTK_BUTTON(u->tabs[0])), ==,
+                    mf_english ? "Inputs" : "Входы");
     if (!snapshot(u)) {
       stage--;
       return G_SOURCE_CONTINUE;
@@ -112,6 +118,22 @@ static gboolean drive(gpointer unused) {
     g_assert_false(
         yes(idx(idx(get(get(u->state, "preset"), "virtual_visible"), 1), 2)));
     settings(NULL, u);
+    {
+      gboolean current_language = mf_english;
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(u->language), 1);
+      Ui restored = {0};
+      load_theme(&restored);
+      g_assert_false(mf_english);
+      g_assert_cmpstr(tr("Настройки"), ==, "Настройки");
+      g_assert_cmpstr(tr_service_error("Connect MiniFuse to configure audio"), ==,
+                      "Подключите MiniFuse, чтобы настроить звук");
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(u->language), 2);
+      load_theme(&restored);
+      g_assert_true(mf_english);
+      g_assert_cmpstr(tr("Настройки"), ==, "Settings");
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(u->language), 0);
+      mf_english = current_language;
+    }
     gtk_drop_down_set_selected(GTK_DROP_DOWN(u->orange), 3);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(u->clip), 1);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(u->peak), 2);

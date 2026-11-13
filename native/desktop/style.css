@@ -30,10 +30,12 @@
 @define-color mf_scroll #95a4b2;
 @define-color mf_connected #227153;
 window { background: @mf_canvas; color: @mf_text; font-family: "Noto Sans", sans-serif; font-size: 13px; }
+label { color: @mf_text; }
+button label, checkbutton label { color: inherit; }
 stack, scrolledwindow, viewport { background: @mf_canvas; color: @mf_text; }
 headerbar { background: @mf_surface; color: @mf_text; border-bottom: 1px solid @mf_line; padding: 5px 10px; min-height: 38px; }
 .brand { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
-.hint, .subtitle { color: @mf_hint; font-size: 11px; opacity: 1; }
+.hint, .subtitle { color: @mf_hint; font-size: 12px; opacity: 1; }
 .section { font-size: 13px; font-weight: 600; }
 .tabs { padding: 6px 12px; background: @mf_toolbar; border-bottom: 1px solid @mf_line; }
 .tabs button { background: transparent; border-color: transparent; box-shadow: none; }
@@ -41,13 +43,13 @@ headerbar { background: @mf_surface; color: @mf_text; border-bottom: 1px solid @
 .mixbar { padding: 7px 12px; background: @mf_surface; border-bottom: 1px solid @mf_line; }
 .mixbar entry { background: transparent; border-color: transparent; }
 .mixbar entry:focus-within { background: @mf_canvas; border-color: @mf_accent; }
-.strip { background: @mf_surface; padding: 12px 8px 10px; border-right: 1px solid @mf_line; }
-.strip-title { font-size: 12px; font-weight: 600; }
-.strip entry:not(.gain) { font-size: 11px; background: transparent; border-color: transparent; }
+.strip { background: @mf_surface; padding: 14px 8px 10px; border-right: 1px solid @mf_line; }
+.strip-title { font-size: 12px; font-weight: 700; }
+.strip entry:not(.gain) { font-size: 12px; background: transparent; border-color: transparent; }
 .strip entry:not(.gain):focus-within { background: @mf_canvas; border-color: @mf_accent; }
 .master { background: @mf_accent_soft; border-left: 2px solid @mf_accent; border-right: 0; }
 .gain, .gain-label { font-size: 15px; font-weight: 600; font-feature-settings: "tnum"; }
-entry.gain { background: @mf_canvas; padding: 2px 3px; min-height: 24px; }
+entry.gain { background: @mf_canvas; padding: 2px 3px; min-height: 26px; border-color: @mf_control_border; }
 .hardware-bar { padding: 7px 12px; background: @mf_toolbar; border-top: 1px solid @mf_line; }
 .footer { padding: 5px 12px; background: @mf_surface; border-top: 1px solid @mf_line; }
 .error { color: @mf_error; }
@@ -78,7 +80,7 @@ scale slider { background: @mf_surface; border: 1px solid @mf_slider_border; min
 .strip scale.horizontal highlight { background: @mf_fader_fill; }
 scale.vertical trough { min-width: 3px; }
 scale.vertical highlight { background: @mf_fader_fill; }
-scale.vertical slider { background: #d4dbe3; min-width: 24px; min-height: 11px; margin: 0 -11px; border-radius: 2px; }
+scale.vertical slider { background: #d4dbe3; min-width: 26px; min-height: 13px; margin: 0 -12px; border-radius: 3px; }
 scale:disabled slider { background: @mf_disabled_bg; border-color: @mf_disabled_line; }
 dropdown { font-size: 12px; }
 scrollbar { padding: 0; }

@@ -19,9 +19,15 @@ jobs:
         run: make -j2 all build/desktop-smoke
       - name: Numeric and input-validation tests
         run: dbus-run-session -- env MINIFUZE_RUNTIME_TESTS=1 make check
-      - name: Isolated GTK integration
+      - name: Isolated GTK integration (Russian)
         env:
           GTK_A11Y: test
+          LANGUAGE: ru
+        run: dbus-run-session -- xvfb-run -a -s '-screen 0 1024x768x24' python3 tools/test_desktop.py --start-pipewire
+      - name: Isolated GTK integration (English)
+        env:
+          GTK_A11Y: test
+          LANGUAGE: en
         run: dbus-run-session -- xvfb-run -a -s '-screen 0 1024x768x24' python3 tools/test_desktop.py --start-pipewire
       - name: Source archive round-trip
         run: |

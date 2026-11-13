@@ -38,7 +38,7 @@ build/minifuze2-engine: $(ENGINE_SRC) native/app/mf.h kernel/minifuze2_uapi.h bu
 	$(CC) $(WARN) $(CFLAGS) -Ibuild/generated $(ENGINE_SRC) -o "$@.tmp" $$($(PKG_CONFIG) --cflags --libs $(ENGINE_DEPS)) -lm -pthread
 	mv "$@.tmp" "$@"
 
-build/minifuze2: $(DESKTOP_SRC) build/generated/desktop_assets.h build/generated/version.h
+build/minifuze2: $(DESKTOP_SRC) native/desktop/i18n.h build/generated/desktop_assets.h build/generated/version.h
 	@$(PKG_CONFIG) --print-errors --exists 'gtk4 >= 4.12' 'libsoup-3.0 >= 3.0' json-c
 	$(CC) $(WARN) $(CFLAGS) -Ibuild/generated $(DESKTOP_SRC) -o "$@.tmp" $$($(PKG_CONFIG) --cflags --libs $(DESKTOP_DEPS)) -lm
 	mv "$@.tmp" "$@"
@@ -46,11 +46,11 @@ build/minifuze2: $(DESKTOP_SRC) build/generated/desktop_assets.h build/generated
 check: all
 	python3 -m unittest discover -s tests -v
 
-build/desktop-smoke: tests/desktop_smoke.c $(DESKTOP_SRC) build/generated/desktop_assets.h build/generated/version.h
+build/desktop-smoke: tests/desktop_smoke.c $(DESKTOP_SRC) native/desktop/i18n.h build/generated/desktop_assets.h build/generated/version.h
 	$(CC) $(WARN) $(CFLAGS) -Ibuild/generated tests/desktop_smoke.c -o "$@.tmp" $$($(PKG_CONFIG) --cflags --libs $(DESKTOP_DEPS)) -lm
 	mv "$@.tmp" "$@"
 
-build/desktop-smoke-asan: tests/desktop_smoke.c $(DESKTOP_SRC) build/generated/desktop_assets.h build/generated/version.h
+build/desktop-smoke-asan: tests/desktop_smoke.c $(DESKTOP_SRC) native/desktop/i18n.h build/generated/desktop_assets.h build/generated/version.h
 	$(CC) $(WARN) -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Ibuild/generated tests/desktop_smoke.c -o "$@.tmp" $$($(PKG_CONFIG) --cflags --libs $(DESKTOP_DEPS)) -lm
 	mv "$@.tmp" "$@"
 
