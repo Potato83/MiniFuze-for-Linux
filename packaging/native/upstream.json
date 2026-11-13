@@ -1,8 +1,8 @@
 {
-  "application_version": "0.1.0",
+  "application_version": "0.1.1",
   "control_module_version": "0.2.0",
   "package_release": 1,
-  "source_revision": "676bec2bccc08bfa7ef6f645e5d09cfc6f1b3539",
-  "source_sha256": "bfee42e91377d20846baade0642b02337a1f1ca766239d4a6ec176b82b3e8fa9",
-  "source_url": "https://codeload.github.com/Potato83/MiniFuze-for-Linux/tar.gz/676bec2bccc08bfa7ef6f645e5d09cfc6f1b3539"
+  "source_revision": "9da637bcb263eac30b4dfb5e9ce8dda21e80ea9a",
+  "source_sha256": "cd37f5dc7d4bf161bf30cc118353523ad50bd66b7d5422a8550ac5edbbf22c5d",
+  "source_url": "https://codeload.github.com/Potato83/MiniFuze-for-Linux/tar.gz/9da637bcb263eac30b4dfb5e9ce8dda21e80ea9a"
 }
