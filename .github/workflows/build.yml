@@ -16,7 +16,16 @@ jobs:
       - name: Dependencies
         run: bash tools/ci_dependencies.sh app
       - name: Build
-        run: make -j2 all build/desktop-smoke
+        run: |
+          set -o pipefail
+          if ! make -j2 all build/desktop-smoke 2>&1 | tee /tmp/minifuze-build.log; then
+            while IFS= read -r line; do
+              line=${line//'%'/'%25'}
+              line=${line//$'\r'/'%0D'}
+              printf '::error::%s\n' "$line"
+            done < /tmp/minifuze-build.log
+            exit 1
+          fi
       - name: Numeric and input-validation tests
         run: dbus-run-session -- env MINIFUZE_RUNTIME_TESTS=1 make check
       - name: Isolated GTK integration (Russian)

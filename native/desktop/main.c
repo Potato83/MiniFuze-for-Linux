@@ -842,7 +842,7 @@ static void render(Ui *u) {
   if (u->audio_info) {
     char info[256];
     if (!online)
-      snprintf(info, sizeof info,
+      snprintf(info, sizeof info, "%s",
                tr("Аудиослужба недоступна. Выбранные значения "
                "ещё не применены."));
     else if (val(get(audio, "actual_rate")) <= 0)

@@ -2,7 +2,7 @@
 CC ?= cc
 PKG_CONFIG ?= pkg-config
 CFLAGS ?= -O2 -g
-WARN = -std=c11 -D_GNU_SOURCE -Wall -Wextra -Werror -ffp-contract=off
+WARN = -std=c11 -D_GNU_SOURCE -Wall -Wextra -Werror -Wformat-security -ffp-contract=off
 ENGINE_SRC = $(wildcard native/app/*.c)
 DESKTOP_SRC = $(wildcard native/desktop/*.c)
 ENGINE_DEPS = json-c libmicrohttpd openssl
