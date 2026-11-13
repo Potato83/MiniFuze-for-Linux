@@ -1,0 +1,74 @@
+{
+  "minifuze2-0.1.1-1-arch-linux-x86_64.pkg.tar.zst": {
+    "digest": "sha256:a7b3a81b6af633af1f07aebb86afe036f8ca405504bbb6c199f43d59afb42217",
+    "id": 744294241
+  },
+  "minifuze2-0.1.1-1-arch-linux-x86_64.pkg.tar.zst.sha256": {
+    "digest": "sha256:b690ded0273298d19c42a414a1f41b94b13f9c503a7b3726e85095de3e3f3fe2",
+    "id": 744294285
+  },
+  "minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst": {
+    "digest": "sha256:3ab98f6e1cc3084724adfea50fd21609b9fbf25d39ed0e8414db4f285083043f",
+    "id": 744294282
+  },
+  "minifuze2-0.1.1-1-cachyos-x86_64.pkg.tar.zst.sha256": {
+    "digest": "sha256:71f8f61c4abcfb688c9d771a94ee7da6abfb9c8eee9ce3daca0f45d55c0718b5",
+    "id": 744294286
+  },
+  "minifuze2-0.1.1-1.src.tar.gz": {
+    "digest": "sha256:a9c9feebe1f2c59a2461b53952ea06a3731f61e34c14372b4807a3401627b509",
+    "id": 744294291
+  },
+  "minifuze2-0.1.1-1.src.tar.gz.sha256": {
+    "digest": "sha256:b7bb0842c5dcc92f11b36f853f494bcaff1e494e4502c2085ca2c646ef0a2bac",
+    "id": 744294299
+  },
+  "minifuze2-0.1.1-source.tar.gz": {
+    "digest": "sha256:ce5eaafae54fc581185bdfd19dfd068aff047d03de6b8b20934df8d1e841be9e",
+    "id": 744294250
+  },
+  "minifuze2-0.1.1-source.tar.gz.sha256": {
+    "digest": "sha256:2222fd9810dbccf48baf3818923b57b6cc38d74080f1058c2aa66ddffa89102a",
+    "id": 744294245
+  },
+  "minifuze2-0.1.1-ubuntu-24.04-x86_64.tar.gz": {
+    "digest": "sha256:f62d3403f3e5ea6e82df11dfde3afeb4c04a3f7b9e94176ede3cc6dc40f7bb8d",
+    "id": 744294249
+  },
+  "minifuze2-0.1.1-ubuntu-24.04-x86_64.tar.gz.sha256": {
+    "digest": "sha256:c33c807eb95b34e167700b4b53502df8508060c506fd0c307564ea65200508d1",
+    "id": 744294238
+  },
+  "minifuze2-ctl-dkms-0.2.0-1-any.pkg.tar.zst": {
+    "digest": "sha256:885425b3a6b8d12693ab30f7e56d8418785f4852d0df5a29334cbb552d700539",
+    "id": 744294316
+  },
+  "minifuze2-ctl-dkms-0.2.0-1-any.pkg.tar.zst.sha256": {
+    "digest": "sha256:034de79e6629c9a43fa5190a58cffc09c19635683acab7c7cd435720f47839c6",
+    "id": 744294318
+  },
+  "minifuze2-ctl-dkms-0.2.0-1.src.tar.gz": {
+    "digest": "sha256:d232034cfe41789f8fe4da359eb63b471c9451253cd9d108481c73ad237ed621",
+    "id": 744294315
+  },
+  "minifuze2-ctl-dkms-0.2.0-1.src.tar.gz.sha256": {
+    "digest": "sha256:72e2ca4f3dd507cdc35bee951fa6d9dccdfec835684d7ad77a88776a759622a7",
+    "id": 744294320
+  },
+  "minifuze2-ctl-dkms_0.2.0-1_all.deb": {
+    "digest": "sha256:17d81ef9da9103a49df3878b0fec0476ef98ac1c3d49bfd3b1bfed565f4d6be7",
+    "id": 744294322
+  },
+  "minifuze2-ctl-dkms_0.2.0-1_all.deb.sha256": {
+    "digest": "sha256:180ea3cc7cde1556256f6e264c8cf73497ee6a57ae69304390ae0e1f176cbbea",
+    "id": 744294339
+  },
+  "minifuze2_0.1.1-1_amd64.deb": {
+    "digest": "sha256:8991436c16cbcdfc5eea00f96b61a184712a59d1fb544fca18113d2e0a76b5de",
+    "id": 744294344
+  },
+  "minifuze2_0.1.1-1_amd64.deb.sha256": {
+    "digest": "sha256:5eae82553a8af8f000ecd7ac99a72baa8a90aa52e55989968c86d1cae0f778cd",
+    "id": 744294349
+  }
+}

@@ -1,0 +1,19 @@
+name: Simplify 0.1.1 release downloads
+on:
+  push:
+    branches: [release/cleanup-0.1.1]
+permissions:
+  contents: read
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove only the reviewed extra assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/cleanup_release_011.py --execute
